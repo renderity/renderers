@@ -1,0 +1,108 @@
+{
+	"variables":
+	{
+		"gcc-x64":
+		{
+			"LIBS": "/home/denis/libs",
+			"REPS": "/home/denis/reps"
+		}
+	},
+
+	"entries":
+	{
+		"type": "static",
+
+		"name": "renderers",
+
+		"include_directories":
+		[
+			"$(REPS)/KhronosGroup/glslang",
+			"$(REPS)/renderity"
+		],
+
+		"flags": "$(STD_20) $(NO_LINK) $(VERBOSE) $(OPT_FASTX) $(SSE) $(FLAGS_ADD) -fPIC",
+
+		"watch_files":
+		[
+			{
+				"file": "$(SRC)/opengl/opengl.cpp",
+				"watch_files":
+				[
+					"$(SRC)/base/renderer.h",
+					"$(SRC)/opengl/opengl.h"
+				]
+			},
+
+			{
+				"file": "$(SRC)/vulkan/vulkan.cpp",
+				"watch_files":
+				[
+					"$(SRC)/base/renderer.h",
+					"$(SRC)/vulkan/vulkan.h"
+				]
+			},
+
+			{
+				"group":
+				[
+					"$(REPS)/KhronosGroup/glslang/glslang/CInterface/glslang_c_interface.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/ShaderLang.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/InfoSink.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/Intermediate.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/PoolAlloc.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/Scan.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/SymbolTable.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/reflection.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/iomapper.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/linkValidate.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/intermOut.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/IntermTraverse.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/Versions.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/ParseHelper.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/Initialize.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/SpirvIntrinsics.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/RemoveTree.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/Constant.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/ParseContextBase.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/limits.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/glslang_tab.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/parseConst.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/attribute.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/propagateNoContraction.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/preprocessor/PpContext.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/preprocessor/PpScanner.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/preprocessor/PpAtom.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/preprocessor/Pp.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/MachineIndependent/preprocessor/PpTokens.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/OSDependent/Unix/ossource.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/GenericCodeGen/CodeGen.cpp",
+					"$(REPS)/KhronosGroup/glslang/glslang/GenericCodeGen/Link.cpp",
+					"$(REPS)/KhronosGroup/glslang/OGLCompilersDLL/InitializeDll.cpp",
+					"$(REPS)/KhronosGroup/glslang/SPIRV/CInterface/spirv_c_interface.cpp",
+					"$(REPS)/KhronosGroup/glslang/SPIRV/GlslangToSpv.cpp",
+					"$(REPS)/KhronosGroup/glslang/SPIRV/Logger.cpp",
+					"$(REPS)/KhronosGroup/glslang/SPIRV/SpvBuilder.cpp",
+					"$(REPS)/KhronosGroup/glslang/SPIRV/SpvPostProcess.cpp",
+					"$(REPS)/KhronosGroup/glslang/SPIRV/InReadableOrder.cpp"
+				],
+
+				"flags_override": "$(OPT_SIZE) -c -w -fPIC",
+				"include_directories_override":
+				[
+					"$(REPS)/KhronosGroup/glslang"
+				]
+			},
+
+			{
+				"file": "$(SRC)/glad/src/glad.c",
+				"flags_override": "$(OPT_SIZE) -c -w -fPIC",
+				"include_directories_override":
+				[
+					"$(SRC)/glad/include"
+				]
+			},
+
+			"$(SRC)/glfw/glfw-3.3.5/build/src/libglfw3.$(LIB_EXT)"
+		]
+	}
+}
