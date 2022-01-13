@@ -2431,7 +2431,7 @@ namespace RDTY
 
 
 
-#define RS_VULKAN_GET_INSTANCE(type, renderer, wrapper) RDTY::VULKAN::getInstance<RDTY::VULKAN:: type, RDTY::WRAPPERS:: type>(renderer, wrapper)
+#define RDTY_VULKAN_GET_INSTANCE(type, renderer, wrapper) RDTY::VULKAN::getInstance<RDTY::VULKAN:: type, RDTY::WRAPPERS:: type>(renderer, wrapper)
 
 
 

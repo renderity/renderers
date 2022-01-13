@@ -206,7 +206,7 @@ namespace RDTY
 
 
 
-#define RS_OPENGL_GET_INSTANCE(type, renderer, wrapper) RDTY::OPENGL::getInstance<RDTY::OPENGL:: type, RDTY::WRAPPERS:: type>(renderer, wrapper)
+#define RDTY_OPENGL_GET_INSTANCE(type, renderer, wrapper) RDTY::OPENGL::getInstance<RDTY::OPENGL:: type, RDTY::WRAPPERS:: type>(renderer, wrapper)
 
 
 
