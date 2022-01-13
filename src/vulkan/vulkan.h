@@ -269,7 +269,7 @@ std::vector<uint32_t> QWE (const char*, glslang_stage_t);
 
 
 
-namespace RDTY::VULKAN::WRAPPERS
+namespace RDTY::VULKAN::HELPERS
 {
 	// SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle { SHARED_LIBRARY_MODULE_INIT_VALUE };
 	extern SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle;
@@ -2123,7 +2123,7 @@ namespace RDTY::VULKAN::WRAPPERS
 
 
 
-using namespace RDTY::VULKAN::WRAPPERS;
+using namespace RDTY::VULKAN::HELPERS;
 
 
 
