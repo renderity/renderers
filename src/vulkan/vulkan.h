@@ -582,9 +582,9 @@ namespace RDTY::VULKAN::HELPERS
 
 			loadInstanceFunctions(handle);
 
-			#ifdef DEBUG
-				RS_VULKAN_MACRO_CREATE_DEBUG_REPORT_CALLBACKS(handle)
-			#endif
+			// #ifdef DEBUG
+			// 	RS_VULKAN_MACRO_CREATE_DEBUG_REPORT_CALLBACKS(handle)
+			// #endif
 
 			enumDevs();
 		}
@@ -2133,6 +2133,28 @@ namespace RDTY
 	{
 		struct RendererBase : public RDTY::RENDERERS::Renderer
 		{
+			static std::vector<VkPhysicalDevice> test (void)
+			{
+				VkApplicationInfo app_i { AppI() };
+
+				Instance inst {};
+
+				inst.create(&app_i, 0, nullptr, 0, nullptr);
+
+				std::vector<VkPhysicalDevice> result(inst.physical_device_count);
+
+				for (size_t i {}; i < inst.physical_device_count; ++i)
+				{
+					result[i] = inst.physical_devices[i];
+				}
+
+				return result;
+
+				inst.destroy();
+			}
+
+
+
 			// WRAPPERS::Renderer* wrapper {};
 
 			GLFWwindow* window {};

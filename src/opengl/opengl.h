@@ -5,6 +5,7 @@
 
 // size_t
 #include <cstddef>
+#include <string>
 
 #include "renderers/src/glad/include/glad/glad.h"
 #include "renderers/src/glfw/glfw-3.3.5/include/GLFW/glfw3.h"
@@ -25,6 +26,33 @@ namespace RDTY
 	{
 		struct RendererBase : public RDTY::RENDERERS::Renderer
 		{
+			static std::string test (void)
+			{
+				glfwInit();
+
+				glfwDefaultWindowHints();
+				glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+				glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+				glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+
+				GLFWwindow* window = glfwCreateWindow(1, 1, "", nullptr, nullptr);
+
+				glfwHideWindow(window);
+
+				glfwMakeContextCurrent(window);
+
+				gladLoadGL();
+
+				std::string opengl_version((const char*) glGetString(GL_VERSION));
+
+				glfwDestroyWindow(window);
+				glfwTerminate();
+
+				return opengl_version;
+			}
+
+
+
 			// WRAPPERS::Renderer* wrapper {};
 
 			GLFWwindow* window {};

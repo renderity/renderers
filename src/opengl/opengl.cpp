@@ -46,8 +46,6 @@ namespace RDTY
 			glViewport(0, 0, wrapper->width, wrapper->height);
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
-
-			// window = glfwCreateWindow(window_width, window_height, "", nullptr, nullptr);
 		}
 
 
@@ -64,6 +62,8 @@ namespace RDTY
 
 		void Renderer::destroy (void)
 		{
+			glfwDestroyWindow(window);
+			glfwTerminate();
 		}
 
 
