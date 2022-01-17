@@ -6,6 +6,7 @@
 // size_t
 #include <cstddef>
 #include <vector>
+#include <map>
 
 #if defined(__linux__)
 	#define GLFW_EXPOSE_NATIVE_X11
@@ -28,7 +29,7 @@
 
 #include "glslang/Include/glslang_c_interface.h"
 
-// #include "wrappers/src/renderer/renderer.h"
+#include "wrappers/src/renderer/renderer.h"
 #include "wrappers/src/uniform/uniform.h"
 #include "wrappers/src/uniform-block/uniform-block.h"
 #include "wrappers/src/descriptor-set/descriptor-set.h"
@@ -277,19 +278,6 @@ namespace RDTY::VULKAN::HELPERS
 
 
 
-	INLINE void loadGlobalFunctions (void)
-	{
-		vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr) SHARED_LIBRARY_LOAD_FUNCTION(shared_library_module_handle, "vkGetInstanceProcAddr");
-
-		#define GET_PROC_ADDR(name) name = (PFN_##name) vkGetInstanceProcAddr(nullptr, #name)
-
-		GET_PROC_ADDR(vkCreateInstance);
-		GET_PROC_ADDR(vkEnumerateInstanceLayerProperties);
-		GET_PROC_ADDR(vkEnumerateInstanceExtensionProperties);
-
-		#undef GET_PROC_ADDR
-	}
-
 	INLINE void loadSharedLibrary (void)
 	{
 		// if (shared_library_module_handle) {
@@ -315,6 +303,19 @@ namespace RDTY::VULKAN::HELPERS
 		// cout << "DLCLOSE " << SHARED_LIBRARY_FREE(shared_library_module_handle) << endl;
 
 		shared_library_module_handle = SHARED_LIBRARY_MODULE_INIT_VALUE;
+	}
+
+	INLINE void loadGlobalFunctions (void)
+	{
+		vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr) SHARED_LIBRARY_LOAD_FUNCTION(shared_library_module_handle, "vkGetInstanceProcAddr");
+
+		#define GET_PROC_ADDR(name) name = (PFN_##name) vkGetInstanceProcAddr(nullptr, #name)
+
+		GET_PROC_ADDR(vkCreateInstance);
+		GET_PROC_ADDR(vkEnumerateInstanceLayerProperties);
+		GET_PROC_ADDR(vkEnumerateInstanceExtensionProperties);
+
+		#undef GET_PROC_ADDR
 	}
 
 	INLINE void loadInstanceFunctions (VkInstance instance)
@@ -539,11 +540,9 @@ namespace RDTY::VULKAN::HELPERS
 			return report_callback;
 		}
 
-		void enumDevs (void)
+		void retrieveAvailableDevices (void)
 		{
 			vkEnumeratePhysicalDevices(handle, &physical_device_count, nullptr);
-
-			cout << "physical_device_count: " << physical_device_count << endl;
 
 			physical_devices = new VkPhysicalDevice[physical_device_count];
 
@@ -559,7 +558,8 @@ namespace RDTY::VULKAN::HELPERS
 			const char* const*           ppEnabledExtensionNames             = nullptr,
 			VkInstanceCreateFlags        flags                               = 0,
 			const void*                  pNext                               = nullptr,
-			const VkAllocationCallbacks* pAllocator                          = nullptr
+			const VkAllocationCallbacks* pAllocator                          = nullptr,
+			const bool&                  loadApiFunctions                    = true
 		)
 		{
 			VkInstanceCreateInfo info =
@@ -574,19 +574,25 @@ namespace RDTY::VULKAN::HELPERS
 				ppEnabledExtensionNames,
 			};
 
-			loadSharedLibrary();
+			if (loadApiFunctions)
+			{
+				loadSharedLibrary();
 
-			loadGlobalFunctions();
+				loadGlobalFunctions();
+			}
 
 			vkCreateInstance(&info, pAllocator, &handle);
 
-			loadInstanceFunctions(handle);
+			// if (loadApiFunctions)
+			// {
+				loadInstanceFunctions(handle);
+			// }
 
 			// #ifdef DEBUG
 			// 	RS_VULKAN_MACRO_CREATE_DEBUG_REPORT_CALLBACKS(handle)
 			// #endif
 
-			enumDevs();
+			retrieveAvailableDevices();
 		}
 
 		VkSurfaceKHR SurfaceKHR
@@ -649,9 +655,9 @@ namespace RDTY::VULKAN::HELPERS
 
 			surfaces.resize(0);
 
-			#ifdef DEBUG
-				RS_VULKAN_MACRO_DESTROY_DEBUG_REPORT_CALLBACKS(handle);
-			#endif
+			// #ifdef DEBUG
+			// 	RS_VULKAN_MACRO_DESTROY_DEBUG_REPORT_CALLBACKS(handle);
+			// #endif
 
 			vkDestroyInstance(handle, nullptr);
 
@@ -2133,7 +2139,9 @@ namespace RDTY
 	{
 		struct RendererBase : public RDTY::RENDERERS::Renderer
 		{
-			static std::vector<VkPhysicalDevice> test (void)
+			static bool loaded;
+
+			static std::map<std::string, size_t> test (void)
 			{
 				VkApplicationInfo app_i { AppI() };
 
@@ -2141,16 +2149,31 @@ namespace RDTY
 
 				inst.create(&app_i, 0, nullptr, 0, nullptr);
 
-				std::vector<VkPhysicalDevice> result(inst.physical_device_count);
+				RendererBase::loaded = true;
+
+				std::map<std::string, size_t> result {};
 
 				for (size_t i {}; i < inst.physical_device_count; ++i)
 				{
-					result[i] = inst.physical_devices[i];
+					VkPhysicalDeviceProperties physical_device_properties {};
+
+					vkGetPhysicalDeviceProperties(inst.physical_devices[i], &physical_device_properties);
+					// cout << inst.physical_device_count << endl;
+					// cout << pProperties.apiVersion << endl;
+					// cout << pProperties.driverVersion << endl;
+					// cout << pProperties.vendorID << endl;
+					// cout << pProperties.deviceID << endl;
+					// cout << pProperties.deviceType << endl;
+
+					// result.insert({ std::string(physical_device_properties.deviceName), (size_t) inst.physical_devices[i] });
+					result.insert({ std::string(physical_device_properties.deviceName), i });
 				}
 
-				return result;
+				delete[] inst.physical_devices;
 
-				inst.destroy();
+				vkDestroyInstance(inst.handle, nullptr);
+
+				return result;
 			}
 
 
@@ -2208,7 +2231,8 @@ namespace RDTY
 
 		struct Renderer : public RendererBase
 		{
-			Renderer (WRAPPERS::Renderer*);
+			// Renderer (WRAPPERS::Renderer*, const VkPhysicalDevice& = VK_NULL_HANDLE);
+			Renderer (WRAPPERS::Renderer*, const size_t& physical_device_index = 0);
 
 
 			VkSurfaceKHR surf { VK_NULL_HANDLE };
@@ -2237,7 +2261,8 @@ namespace RDTY
 
 		struct RendererOffscreen : public RendererBase
 		{
-			RendererOffscreen (WRAPPERS::Renderer*);
+			// RendererOffscreen (WRAPPERS::Renderer*, const VkPhysicalDevice& = VK_NULL_HANDLE);
+			RendererOffscreen (WRAPPERS::Renderer*, const size_t& physical_device_index = 0);
 
 
 

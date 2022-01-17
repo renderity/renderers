@@ -12,6 +12,8 @@ namespace RDTY
 {
 	namespace OPENGL
 	{
+		bool RendererBase::loaded { false };
+
 		RendererBase::RendererBase (WRAPPERS::Renderer* _wrapper)
 		{
 			// cout << (char *) glGetString(GL_VERSION) << endl;
@@ -39,7 +41,13 @@ namespace RDTY
 
 
 
-			gladLoadGL();
+			// if (!RendererBase::loaded)
+			{
+				// gladLoadGL();
+				gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+
+				RendererBase::loaded = true;
+			}
 
 
 

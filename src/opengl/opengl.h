@@ -11,7 +11,7 @@
 #include "renderers/src/glfw/glfw-3.3.5/include/GLFW/glfw3.h"
 #include "renderers/src/base/renderer.h"
 
-// #include "wrappers/src/renderer/renderer.h"
+#include "wrappers/src/renderer/renderer.h"
 #include "wrappers/src/uniform/uniform.h"
 #include "wrappers/src/uniform-block/uniform-block.h"
 #include "wrappers/src/material/material.h"
@@ -26,22 +26,21 @@ namespace RDTY
 	{
 		struct RendererBase : public RDTY::RENDERERS::Renderer
 		{
+			static bool loaded;
+
 			static std::string test (void)
 			{
 				glfwInit();
 
-				glfwDefaultWindowHints();
-				glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-				glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-				glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-
 				GLFWwindow* window = glfwCreateWindow(1, 1, "", nullptr, nullptr);
 
 				glfwHideWindow(window);
-
 				glfwMakeContextCurrent(window);
 
-				gladLoadGL();
+				// gladLoadGL();
+				gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+
+				RendererBase::loaded = true;
 
 				std::string opengl_version((const char*) glGetString(GL_VERSION));
 
@@ -116,7 +115,7 @@ namespace RDTY
 
 			GLint location {};
 
-			GLint locaiton {};
+			// GLint locaiton {};
 
 			using uniform_update_t = void (*) (Uniform*);
 

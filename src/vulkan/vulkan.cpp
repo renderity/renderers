@@ -311,6 +311,8 @@ namespace RDTY
 {
 	namespace VULKAN
 	{
+		bool RendererBase::loaded { false };
+
 		RendererBase::RendererBase (WRAPPERS::Renderer* _wrapper)
 		{
 			type = RDTY::RENDERERS::RendererType::VULKAN;
@@ -320,12 +322,9 @@ namespace RDTY
 
 
 
-		Renderer::Renderer (WRAPPERS::Renderer* _wrapper) : RendererBase(_wrapper)
+		// Renderer::Renderer (WRAPPERS::Renderer* _wrapper, const VkPhysicalDevice& physical_device) : RendererBase(_wrapper)
+		Renderer::Renderer (WRAPPERS::Renderer* _wrapper, const size_t& physical_device_index) : RendererBase(_wrapper)
 		{
-			// QWE = (std::vector<uint32_t> (*) (const char*, glslang_stage_t)) SHARED_LIBRARY_LOAD_FUNCTION(shared_library_module_handle2, "QWE");
-
-
-
 			glfwInit();
 
 			glfwDefaultWindowHints();
@@ -361,12 +360,24 @@ namespace RDTY
 
 			// 	inst.create(&app_i, 1, inst_layers, 3, inst_exts);
 			// #else
+			if (RendererBase::loaded)
+			{
+				inst.create(&app_i, 0, nullptr, 2, inst_exts, false);
+			}
+			else
+			{
 				inst.create(&app_i, 0, nullptr, 2, inst_exts);
+
+				RendererBase::loaded = true;
+			}
 			// #endif
+
+
 
 			// cout << inst.physical_devices << endl;
 
-			VkPhysicalDevice physical_device { inst.physical_devices[1] };
+			// VkPhysicalDevice _physical_device { physical_device == VK_NULL_HANDLE ? inst.physical_devices[0] : physical_device };
+			VkPhysicalDevice _physical_device { inst.physical_devices[physical_device_index] };
 			// VkPhysicalDeviceProperties pProperties = {};
 			// vkGetPhysicalDeviceProperties(physical_device, &pProperties);
 			// cout << inst.physical_device_count << endl;
@@ -386,7 +397,7 @@ namespace RDTY
 
 			const char* dev_exts [] { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-			device.getProps(physical_device, surf);
+			device.getProps(_physical_device, surf);
 
 			static const float queue_priorities { 1.0f };
 
@@ -400,7 +411,7 @@ namespace RDTY
 			// cout << "G " << device.graphics_queue_family_index << endl;
 			// cout << "P " <<  device.present_queue_family_index << endl;
 
-			device.create(physical_device, device.graphics_queue_family_index != device.present_queue_family_index ? 2 : 1, queue_ci.data(), 0, nullptr, 1, dev_exts);
+			device.create(_physical_device, device.graphics_queue_family_index != device.present_queue_family_index ? 2 : 1, queue_ci.data(), 0, nullptr, 1, dev_exts);
 
 			graphics_queue = device.Queue(device.graphics_queue_family_index, 0);
 			present_queue = device.Queue(device.present_queue_family_index, 0);
@@ -700,21 +711,23 @@ namespace RDTY
 
 
 
-		RendererOffscreen::RendererOffscreen (WRAPPERS::Renderer* _wrapper) : RendererBase(_wrapper)
+		// RendererOffscreen::RendererOffscreen (WRAPPERS::Renderer* _wrapper, const VkPhysicalDevice& physical_device) : RendererBase(_wrapper)
+		RendererOffscreen::RendererOffscreen (WRAPPERS::Renderer* _wrapper, const size_t& physical_device_index) : RendererBase(_wrapper)
 		{
 			VkApplicationInfo app_i { AppI() };
 
 			inst.create(&app_i, 0, nullptr, 0, nullptr);
 
-			VkPhysicalDevice physical_device { inst.physical_devices[1] };
+			// VkPhysicalDevice _physical_device { physical_device == VK_NULL_HANDLE ? inst.physical_devices[0] : physical_device };
+			VkPhysicalDevice _physical_device { inst.physical_devices[physical_device_index] };
 
-			device.getProps(physical_device, VK_NULL_HANDLE);
+			device.getProps(_physical_device, VK_NULL_HANDLE);
 
 			static const float queue_priorities { 1.0f };
 
 			std::vector<VkDeviceQueueCreateInfo> queue_ci { DevQueueCI(device.graphics_queue_family_index, 1, &queue_priorities) };
 
-			device.create(physical_device, 1, queue_ci.data(), 0, nullptr, 0, nullptr);
+			device.create(_physical_device, 1, queue_ci.data(), 0, nullptr, 0, nullptr);
 
 			graphics_queue = device.Queue(device.graphics_queue_family_index, 0);
 
