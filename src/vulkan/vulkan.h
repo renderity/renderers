@@ -378,7 +378,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void* pNext              = nullptr
 	)
 	{
-		VkApplicationInfo info =
+		VkApplicationInfo info
 		{
 			VK_STRUCTURE_TYPE_APPLICATION_INFO,
 			pNext,
@@ -426,7 +426,7 @@ namespace RDTY::VULKAN::HELPERS
 			const bool&                  loadApiFunctions                    = true
 		)
 		{
-			VkInstanceCreateInfo info =
+			VkInstanceCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 				pNext,
@@ -472,7 +472,7 @@ namespace RDTY::VULKAN::HELPERS
 		)
 		{
 			#if defined(__linux__)
-				VkXlibSurfaceCreateInfoKHR info =
+				VkXlibSurfaceCreateInfoKHR info
 				{
 					VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
 					pNext,
@@ -481,7 +481,7 @@ namespace RDTY::VULKAN::HELPERS
 					window,
 				};
 			#elif defined(_WIN64)
-				VkWin32SurfaceCreateInfoKHR info =
+				VkWin32SurfaceCreateInfoKHR info
 				{
 					VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
 					pNext,
@@ -532,7 +532,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*              pNext            = nullptr
 	)
 	{
-		VkDeviceQueueCreateInfo info =
+		VkDeviceQueueCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
 			pNext,
@@ -555,7 +555,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                             pNext                  = nullptr
 	)
 	{
-		VkPipelineInputAssemblyStateCreateInfo info =
+		VkPipelineInputAssemblyStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 			pNext,
@@ -576,7 +576,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                            pNext              = nullptr
 	)
 	{
-		VkPipelineTessellationStateCreateInfo info =
+		VkPipelineTessellationStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
 			pNext,
@@ -599,7 +599,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                        pNext         = nullptr
 	)
 	{
-		VkPipelineViewportStateCreateInfo info =
+		VkPipelineViewportStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 			pNext,
@@ -627,7 +627,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                           pNext                 = nullptr
 	)
 	{
-		VkPipelineMultisampleStateCreateInfo info =
+		VkPipelineMultisampleStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
 			pNext,
@@ -661,7 +661,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                             pNext                   = nullptr
 	)
 	{
-		VkPipelineRasterizationStateCreateInfo info =
+		VkPipelineRasterizationStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 			pNext,
@@ -698,7 +698,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                            pNext                 = nullptr
 	)
 	{
-		VkPipelineDepthStencilStateCreateInfo info =
+		VkPipelineDepthStencilStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 			pNext,
@@ -733,7 +733,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                                pNext            = nullptr
 	)
 	{
-		VkPipelineColorBlendStateCreateInfo info =
+		VkPipelineColorBlendStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
 			pNext,
@@ -761,7 +761,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                       pNext             = nullptr
 	)
 	{
-		VkPipelineDynamicStateCreateInfo info =
+		VkPipelineDynamicStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
 			pNext,
@@ -785,7 +785,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                      pNext               = nullptr
 	)
 	{
-		VkPipelineShaderStageCreateInfo info =
+		VkPipelineShaderStageCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 			pNext,
@@ -811,7 +811,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                              pNext                           = nullptr
 	)
 	{
-		VkPipelineVertexInputStateCreateInfo info =
+		VkPipelineVertexInputStateCreateInfo info
 		{
 			VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 			pNext,
@@ -840,7 +840,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                   pNext            = nullptr
 	)
 	{
-		VkWriteDescriptorSet info =
+		VkWriteDescriptorSet info
 		{
 			VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			pNext,
@@ -866,7 +866,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                           pNext            = nullptr
 	)
 	{
-		VkCommandBufferBeginInfo info =
+		VkCommandBufferBeginInfo info
 		{
 			VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 			pNext,
@@ -889,7 +889,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*         pNext           = nullptr
 	)
 	{
-		VkRenderPassBeginInfo info =
+		VkRenderPassBeginInfo info
 		{
 			VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 			pNext,
@@ -917,7 +917,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*                 pNext                = nullptr
 	)
 	{
-		VkSubmitInfo info =
+		VkSubmitInfo info
 		{
 			VK_STRUCTURE_TYPE_SUBMIT_INFO,
 			pNext,
@@ -946,7 +946,7 @@ namespace RDTY::VULKAN::HELPERS
 		const void*           pNext              = nullptr
 	)
 	{
-		VkPresentInfoKHR info =
+		VkPresentInfoKHR info
 		{
 			VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			pNext,
@@ -1159,7 +1159,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks*    pAllocator              = nullptr
 		)
 		{
-			VkDeviceCreateInfo info =
+			VkDeviceCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 				pNext,
@@ -1200,7 +1200,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks*   pAllocator      = nullptr
 		)
 		{
-			VkRenderPassCreateInfo info =
+			VkRenderPassCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
 				pNext,
@@ -1245,7 +1245,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks*  pAllocator            = nullptr
 		)
 		{
-			VkSwapchainCreateInfoKHR info =
+			VkSwapchainCreateInfoKHR info
 			{
 				VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 				pNext,
@@ -1313,7 +1313,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator            = nullptr
 		)
 		{
-			VkImageCreateInfo info =
+			VkImageCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 				pNext,
@@ -1366,7 +1366,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator                      = nullptr
 		)
 		{
-			VkImageViewCreateInfo info =
+			VkImageViewCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 				pNext,
@@ -1443,7 +1443,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator      = nullptr
 		)
 		{
-			VkMemoryAllocateInfo info =
+			VkMemoryAllocateInfo info
 			{
 				VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 				pNext,
@@ -1492,7 +1492,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator      = nullptr
 		)
 		{
-			VkFramebufferCreateInfo info =
+			VkFramebufferCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 				pNext,
@@ -1521,7 +1521,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator = nullptr
 		)
 		{
-			VkFenceCreateInfo info =
+			VkFenceCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 				pNext,
@@ -1544,7 +1544,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator = nullptr
 		)
 		{
-			VkSemaphoreCreateInfo info =
+			VkSemaphoreCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
 				pNext,
@@ -1572,7 +1572,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator            = nullptr
 		)
 		{
-			VkBufferCreateInfo info =
+			VkBufferCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 				pNext,
@@ -1602,7 +1602,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks*        pAllocator   = nullptr
 		)
 		{
-			VkDescriptorSetLayoutCreateInfo info =
+			VkDescriptorSetLayoutCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 				pNext,
@@ -1630,7 +1630,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator    = nullptr
 		)
 		{
-			VkDescriptorPoolCreateInfo info =
+			VkDescriptorPoolCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 				pNext,
@@ -1658,7 +1658,7 @@ namespace RDTY::VULKAN::HELPERS
 			const void*                  pNext              = nullptr
 		)
 		{
-			VkDescriptorSetAllocateInfo info =
+			VkDescriptorSetAllocateInfo info
 			{
 				VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 				pNext,
@@ -1703,7 +1703,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator = nullptr
 		)
 		{
-			VkShaderModuleCreateInfo info =
+			VkShaderModuleCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 				pNext,
@@ -1732,7 +1732,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator             = nullptr
 		)
 		{
-			VkPipelineLayoutCreateInfo info =
+			VkPipelineLayoutCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 				pNext,
@@ -1776,7 +1776,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks*                  pAllocator          = nullptr
 		)
 		{
-			VkGraphicsPipelineCreateInfo info =
+			VkGraphicsPipelineCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 				pNext,
@@ -1816,7 +1816,7 @@ namespace RDTY::VULKAN::HELPERS
 			const VkAllocationCallbacks* pAllocator       = nullptr
 		)
 		{
-			VkCommandPoolCreateInfo info =
+			VkCommandPoolCreateInfo info
 			{
 				VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 				pNext,
@@ -1841,7 +1841,7 @@ namespace RDTY::VULKAN::HELPERS
 			const void*          pNext              = nullptr
 		)
 		{
-			VkCommandBufferAllocateInfo info =
+			VkCommandBufferAllocateInfo info
 			{
 				VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 				pNext,
@@ -2076,7 +2076,6 @@ namespace RDTY
 
 
 
-			// virtual void endLoop (void) = 0;
 			virtual void destroy (void) override final;
 		};
 
@@ -2106,8 +2105,8 @@ namespace RDTY
 
 
 
+			virtual void beginLoop (void) override;
 			virtual void endLoop (void) override;
-			// virtual void destroy (void) override;
 		};
 
 
@@ -2125,8 +2124,8 @@ namespace RDTY
 
 
 
+			virtual void beginLoop (void) override;
 			virtual void endLoop (void) override;
-			// virtual void destroy (void) override;
 		};
 
 
@@ -2308,6 +2307,8 @@ namespace RDTY
 				instance = new T { renderer, wrapper };
 
 				wrapper->impl_vulkan = instance;
+
+				renderer->wrappers.push_back(wrapper);
 			}
 
 			return instance;

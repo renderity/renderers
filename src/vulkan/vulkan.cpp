@@ -287,11 +287,15 @@ namespace RDTY
 			curr_image = 0;
 
 			const char* inst_exts []
-			#if defined(__linux__)
-				{ "VK_KHR_surface", "VK_KHR_xlib_surface" };
-			#elif defined(_WIN64)
-				{ "VK_KHR_surface", "VK_KHR_win32_surface" };
-			#endif
+			{
+				"VK_KHR_surface",
+
+				#if defined(__linux__)
+					"VK_KHR_xlib_surface",
+				#elif defined(_WIN64)
+					"VK_KHR_win32_surface",
+				#endif
+			};
 
 			VkApplicationInfo app_i { AppI() };
 
@@ -305,10 +309,11 @@ namespace RDTY
 
 			// 	RendererBase::loaded = true;
 			// }
-			inst.create(&app_i, 0, nullptr, 0, nullptr);
+			inst.create(&app_i, 0, nullptr, 2, inst_exts);
 
 			// VkPhysicalDevice _physical_device { physical_device == VK_NULL_HANDLE ? inst.physical_devices[0] : physical_device };
 			VkPhysicalDevice _physical_device { inst.physical_devices[physical_device_index] };
+			cout << physical_device_index << endl;
 			// VkPhysicalDeviceProperties pProperties = {};
 			// vkGetPhysicalDeviceProperties(physical_device, &pProperties);
 			// cout << inst.physical_device_count << endl;
@@ -623,8 +628,41 @@ namespace RDTY
 			}
 		}
 
+		void Renderer::beginLoop (void)
+		{
+			// memcpy(uniform_buffer_mem_addr + 64, ((void*) &orbit) + 64, 64);
+
+			vkAcquireNextImageKHR(device.handle, swapchain, 0xFFFFFFFF, image_available_semaphores[curr_image], VK_NULL_HANDLE, &image_indices[curr_image]);
+
+			// VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+			static const VkCommandBufferBeginInfo command_buffer_bi { CmdBufferBeginI(nullptr, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT) };
+
+			vkWaitForFences(device.handle, 1, &submission_completed_fences[curr_image], VK_TRUE, 0xFFFFFFFF);
+
+			vkBeginCommandBuffer(cmd_buffers[curr_image], &command_buffer_bi);
+		}
+
 		void Renderer::endLoop (void)
 		{
+			vkCmdEndRenderPass(cmd_buffers[curr_image]);
+			vkEndCommandBuffer(cmd_buffers[curr_image]);
+
+			vkResetFences(device.handle, 1, &submission_completed_fences[curr_image]);
+
+			vkQueueSubmit(graphics_queue, 1, &submit_i[curr_image], submission_completed_fences[curr_image]);
+
+			present_i[curr_image].pImageIndices = &image_indices[curr_image];
+
+			vkQueuePresentKHR(present_queue, &present_i[curr_image]);
+
+
+
+			const static uint64_t max_swapchain_image_index { swapchain_image_count - 1 };
+
+			if (++curr_image > max_swapchain_image_index)
+			{
+				curr_image = 0;
+			}
 		}
 
 		// void Renderer::destroy (void)
@@ -896,8 +934,45 @@ namespace RDTY
 			}
 		}
 
+		void RendererOffscreen::beginLoop (void)
+		{
+			static const VkCommandBufferBeginInfo command_buffer_bi { CmdBufferBeginI(nullptr, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT) };
+
+			vkBeginCommandBuffer(cmd_buffers[0], &command_buffer_bi);
+		}
+
 		void RendererOffscreen::endLoop (void)
 		{
+			vkCmdEndRenderPass(cmd_buffers[0]);
+
+			VkImageSubresourceLayers image_subresource_layers
+			{
+				VK_IMAGE_ASPECT_COLOR_BIT,
+				0, 0, 1
+			};
+
+			VkBufferImageCopy buffer_image_copy
+			{
+				0, 800, 600,
+				image_subresource_layers,
+				{ 0, 0, 0 },
+				{ 800, 600, 1 },
+			};
+
+			vkCmdCopyImageToBuffer
+			(
+				cmd_buffers[0],
+				render_images[0],
+				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				pixel_buffer,
+				1, &buffer_image_copy
+			);
+
+			vkEndCommandBuffer(cmd_buffers[0]);
+
+			vkQueueSubmit(graphics_queue, 1, &submit_i[0], nullptr);
+
+			vkDeviceWaitIdle(device.handle);
 		}
 
 		// void RendererOffscreen::destroy (void)
@@ -1022,19 +1097,6 @@ namespace RDTY
 
 			for (WRAPPERS::UniformBlock* binding_wrapper : wrapper->bindings)
 			{
-				// UniformBlock* binding {};
-
-				// if (binding_wrapper->impl_vulkan)
-				// {
-				// 	binding = static_cast<UniformBlock*>(binding_wrapper->impl_vulkan);
-				// }
-				// else
-				// {
-				// 	binding = new UniformBlock { renderer, binding_wrapper } ;
-
-				// 	binding_wrapper->impl_vulkan = binding;
-				// }
-
 				UniformBlock* binding { getInstance<UniformBlock, WRAPPERS::UniformBlock>(renderer, binding_wrapper) };
 
 				bindings.push_back(binding);
@@ -1042,12 +1104,12 @@ namespace RDTY
 				descr_set_layout_bindings.push_back(binding->layout);
 			}
 
-			cout << "Bindings: " << descr_set_layout_bindings.size() << endl;
+			// cout << "Bindings: " << descr_set_layout_bindings.size() << endl;
 			layout = renderer->device.DescrSetLayout(descr_set_layout_bindings.size(), descr_set_layout_bindings.data());
 
 			handle = renderer->device.DescrSet(renderer->descriptor_pool, 1, &layout).data()[0];
 
-			cout << "handle: " << handle << endl;
+			// cout << "handle: " << handle << endl;
 
 			for (UniformBlock* binding : bindings)
 			{

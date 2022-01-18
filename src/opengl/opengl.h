@@ -63,7 +63,6 @@ namespace RDTY
 
 
 			virtual void destroy (void) override final;
-			// virtual void endLoop (void) = 0;
 		};
 
 
@@ -74,8 +73,8 @@ namespace RDTY
 
 
 
+			virtual void beginLoop (void) override;
 			virtual void endLoop (void) override;
-			// virtual void destroy (void) override;
 		};
 
 
@@ -98,8 +97,8 @@ namespace RDTY
 
 
 
+			virtual void beginLoop (void) override;
 			virtual void endLoop (void) override;
-			// virtual void destroy (void) override;
 		};
 
 

@@ -76,18 +76,14 @@ namespace RDTY
 			glfwSwapInterval(0);
 		}
 
+		void Renderer::beginLoop (void)
+		{
+		}
+
 		void Renderer::endLoop (void)
 		{
 			glfwSwapBuffers(window);
 		}
-
-		// void Renderer::destroy (void)
-		// {
-		// 	glFinish();
-
-		// 	glfwDestroyWindow(window);
-		// 	glfwTerminate();
-		// }
 
 
 
@@ -147,6 +143,10 @@ namespace RDTY
 			}
 		}
 
+		void RendererOffscreen::beginLoop (void)
+		{
+		}
+
 		void RendererOffscreen::endLoop (void)
 		{
 			// glBindBuffer(GL_PIXEL_PACK_BUFFER, pixel_pack_buffer);
@@ -165,14 +165,6 @@ namespace RDTY
 			// glDrawBuffer(GL_BACK);
 			// glReadBuffer(GL_FRONT);
 		}
-
-		// void RendererOffscreen::destroy (void)
-		// {
-		// 	glFinish();
-
-		// 	glfwDestroyWindow(window);
-		// 	glfwTerminate();
-		// }
 
 
 

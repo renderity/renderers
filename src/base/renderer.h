@@ -35,6 +35,7 @@ namespace RDTY
 
 			std::vector<WRAPPERS::Base*> wrappers {};
 
+			virtual void beginLoop (void) = 0;
 			virtual void endLoop (void) = 0;
 			virtual void destroy (void) = 0;
 		};
