@@ -62,6 +62,7 @@ namespace RDTY
 
 
 
+			virtual void destroy (void) override final;
 			// virtual void endLoop (void) = 0;
 		};
 
@@ -74,7 +75,7 @@ namespace RDTY
 
 
 			virtual void endLoop (void) override;
-			virtual void destroy (void) override;
+			// virtual void destroy (void) override;
 		};
 
 
@@ -98,7 +99,7 @@ namespace RDTY
 
 
 			virtual void endLoop (void) override;
-			virtual void destroy (void) override;
+			// virtual void destroy (void) override;
 		};
 
 
@@ -215,15 +216,17 @@ namespace RDTY
 		{
 			T* instance {};
 
-			if (wrapper->opengl_impl)
+			if (wrapper->impl_opengl)
 			{
-				instance = static_cast<T*>(wrapper->opengl_impl);
+				instance = static_cast<T*>(wrapper->impl_opengl);
 			}
 			else
 			{
 				instance = new T { renderer, wrapper };
 
-				wrapper->opengl_impl = instance;
+				wrapper->impl_opengl = instance;
+
+				renderer->wrappers.push_back(wrapper);
 			}
 
 			return instance;

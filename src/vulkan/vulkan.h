@@ -3,6 +3,28 @@
 
 
 
+#if defined(__GNUC__)
+	#define INLINE __attribute__((always_inline)) inline
+#elif defined(_MSC_VER)
+	#define INLINE __forceinline
+#endif
+
+#if defined(__linux__)
+	#define SHARED_LIBRARY_MODULE_TYPE void*
+	#define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
+	#define SHARED_LIBRARY_LOAD dlopen("libvulkan.so.1", RTLD_LAZY)
+	#define SHARED_LIBRARY_LOAD_FUNCTION dlsym
+	#define SHARED_LIBRARY_FREE dlclose
+#elif defined(_WIN64)
+	#define SHARED_LIBRARY_MODULE_TYPE HMODULE
+	#define SHARED_LIBRARY_MODULE_INIT_VALUE 0
+	#define SHARED_LIBRARY_LOAD LoadLibrary("vulkan-1.dll")
+	#define SHARED_LIBRARY_LOAD_FUNCTION GetProcAddress
+	#define SHARED_LIBRARY_FREE FreeLibrary
+#endif
+
+
+
 // size_t
 #include <cstddef>
 #include <vector>
@@ -39,89 +61,9 @@
 
 
 
-#if defined(__GNUC__)
-	#define INLINE __attribute__((always_inline)) inline
-#elif defined(_MSC_VER)
-	#define INLINE __forceinline
-#endif
-
-
-
-// #include "vulkan/vulkan.h"
-
-
-
 #include <iostream>
 using std::cout;
 using std::endl;
-
-// REQUIRED HEADERS
-///////////////////
-///////////////////
-
-// #include <cstddef>
-// #include <cstdint>
-// #include <cstring>
-// #include <cstdio>
-// #include <vector>
-
-// #if defined(__linux__)
-
-//   #define VK_USE_PLATFORM_XLIB_KHR
-//   #include <dlfcn.h>
-//   #include <X11/Xlib.h>
-// #elif defined(_WIN64)
-
-//   #define VK_USE_PLATFORM_WIN32_KHR
-//   #define WIN32_LEAN_AND_MEAN
-//   #include <Windows.h>
-// #endif
-
-// #define VK_NO_PROTOTYPES
-// #include "vulkan.h"
-
-///////////////////
-///////////////////
-///////////////////
-
-
-
-#if defined(__linux__)
-	#define SHARED_LIBRARY_MODULE_TYPE void*
-	#define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
-	#define SHARED_LIBRARY_LOAD dlopen("libvulkan.so.1", RTLD_LAZY)
-	#define SHARED_LIBRARY_LOAD_FUNCTION dlsym
-	#define SHARED_LIBRARY_FREE dlclose
-#elif defined(_WIN64)
-	#define SHARED_LIBRARY_MODULE_TYPE HMODULE
-	#define SHARED_LIBRARY_MODULE_INIT_VALUE 0
-	#define SHARED_LIBRARY_LOAD LoadLibrary("vulkan-1.dll")
-	#define SHARED_LIBRARY_LOAD_FUNCTION GetProcAddress
-	#define SHARED_LIBRARY_FREE FreeLibrary
-#endif
-
-
-
-// #define RS_VULKAN_MACRO_DECLARE_DEBUG_REPORT_CALLBACKS\
-// 	VkDebugReportCallbackEXT report_error { VK_NULL_HANDLE };\
-// 	// VkDebugReportCallbackEXT report_info { VK_NULL_HANDLE };\
-// 	// VkDebugReportCallbackEXT report_warn { VK_NULL_HANDLE };\
-// 	// VkDebugReportCallbackEXT report_perf { VK_NULL_HANDLE };\
-// 	// VkDebugReportCallbackEXT report_debug { VK_NULL_HANDLE };
-
-// #define RS_VULKAN_MACRO_CREATE_DEBUG_REPORT_CALLBACKS(instance)\
-// 	report_error = DebugReportCallbackEXT(&reportError, VK_DEBUG_REPORT_ERROR_BIT_EXT);\
-// 	// report_info = DebugReportCallbackEXT(&reportInfo, VK_DEBUG_REPORT_INFORMATION_BIT_EXT);\
-// 	// report_warn = DebugReportCallbackEXT(&reportWarn, VK_DEBUG_REPORT_WARNING_BIT_EXT);\
-// 	// report_perf = DebugReportCallbackEXT(&reportPerf, VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT);\
-// 	// report_debug = DebugReportCallbackEXT(&reportDebug, VK_DEBUG_REPORT_DEBUG_BIT_EXT);
-
-// #define RS_VULKAN_MACRO_DESTROY_DEBUG_REPORT_CALLBACKS(instance)\
-// 	vkDestroyDebugReportCallbackEXT(instance, report_error, nullptr);\
-// 	// vkDestroyDebugReportCallbackEXT(instance, report_debug, nullptr);\
-// 	// vkDestroyDebugReportCallbackEXT(instance, report_perf, nullptr);\
-// 	// vkDestroyDebugReportCallbackEXT(instance, report_warn, nullptr);\
-// 	// vkDestroyDebugReportCallbackEXT(instance, report_info, nullptr);
 
 
 
@@ -146,9 +88,6 @@ DECL_PROC(vkGetPhysicalDeviceFormatProperties);
 
 DECL_PROC(vkGetDeviceProcAddr);
 DECL_PROC(vkCreateDevice);
-
-DECL_PROC(vkCreateDebugReportCallbackEXT);
-DECL_PROC(vkDestroyDebugReportCallbackEXT);
 
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
 	DECL_PROC(vkCreateXlibSurfaceKHR);
@@ -258,51 +197,31 @@ DECL_PROC(vkDestroyDescriptorSetLayout);
 
 
 
-std::vector<uint32_t> QWE (const char*, glslang_stage_t);
-// std::vector<uint32_t> (* QWE) (const char*, glslang_stage_t);
-
-
-
-// namespace RDTY::VULKAN::WRAPPERS {};
-
-// using RDTY::VULKAN::WRAPPERS::shared_library_module_handle;
-// extern SHARED_LIBRARY_MODULE_TYPE RDTY::VULKAN::WRAPPERS::shared_library_module_handle;
+std::vector<uint32_t> compileGlslToSpirv (const char*, glslang_stage_t);
 
 
 
 namespace RDTY::VULKAN::HELPERS
 {
-	// SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle { SHARED_LIBRARY_MODULE_INIT_VALUE };
 	extern SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle;
-	// SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle = SHARED_LIBRARY_MODULE_INIT_VALUE;
 
 
-
-	INLINE void loadSharedLibrary (void)
-	{
-		// if (shared_library_module_handle) {
-
-		//   // cout << "LIB " << shared_library_module_handle << endl;
-
-		//   // SHARED_LIBRARY_FREE(shared_library_module_handle);
-
-		//   cout << "DLCLOSE " << SHARED_LIBRARY_FREE(shared_library_module_handle) << endl;
-
-		//   // shared_library_module_handle = SHARED_LIBRARY_MODULE_INIT_VALUE;
-		// }
-
-		shared_library_module_handle = SHARED_LIBRARY_LOAD;
-
-		// cout << "LIB " << shared_library_module_handle << endl;
-	}
 
 	INLINE void freeSharedLibrary (void)
 	{
-		// SHARED_LIBRARY_FREE(shared_library_module_handle);
-
-		// cout << "DLCLOSE " << SHARED_LIBRARY_FREE(shared_library_module_handle) << endl;
+		SHARED_LIBRARY_FREE(shared_library_module_handle);
 
 		shared_library_module_handle = SHARED_LIBRARY_MODULE_INIT_VALUE;
+	}
+
+	INLINE void loadSharedLibrary (void)
+	{
+		if (shared_library_module_handle)
+		{
+		  freeSharedLibrary();
+		}
+
+		shared_library_module_handle = SHARED_LIBRARY_LOAD;
 	}
 
 	INLINE void loadGlobalFunctions (void)
@@ -333,9 +252,6 @@ namespace RDTY::VULKAN::HELPERS
 
 		GET_PROC_ADDR(vkGetDeviceProcAddr);
 		GET_PROC_ADDR(vkCreateDevice);
-
-		GET_PROC_ADDR(vkCreateDebugReportCallbackEXT);
-		GET_PROC_ADDR(vkDestroyDebugReportCallbackEXT);
 
 		#if defined(__linux__)
 			GET_PROC_ADDR(vkCreateXlibSurfaceKHR);
@@ -478,29 +394,6 @@ namespace RDTY::VULKAN::HELPERS
 
 
 
-	// #ifdef DEBUG
-	// 	#define DEBUG_REPORT_ARGS \
-	// 		\
-	// 		VkDebugReportFlagsEXT      flags,\
-	// 		VkDebugReportObjectTypeEXT objectType,\
-	// 		uint64_t                   object,\
-	// 		size_t                     location,\
-	// 		int32_t                    messageCode,\
-	// 		const char*                pLayerPrefix,\
-	// 		const char*                pMessage,\
-	// 		void*                      pUserData
-
-	// 	VkBool32 reportError(DEBUG_REPORT_ARGS);
-	// 	VkBool32 reportInfo(DEBUG_REPORT_ARGS);
-	// 	VkBool32 reportWarn(DEBUG_REPORT_ARGS);
-	// 	VkBool32 reportPerf(DEBUG_REPORT_ARGS);
-	// 	VkBool32 reportDebug(DEBUG_REPORT_ARGS);
-
-	// 	#undef DEBUG_REPORT_ARGS
-	// #endif
-
-
-
 	struct Instance
 	{
 		VkInstance        handle                = VK_NULL_HANDLE;
@@ -509,36 +402,7 @@ namespace RDTY::VULKAN::HELPERS
 
 		std::vector<VkSurfaceKHR> surfaces;
 
-		// #ifdef DEBUG
-		// 	RS_VULKAN_MACRO_DECLARE_DEBUG_REPORT_CALLBACKS
-		// #endif
 
-
-
-		VkDebugReportCallbackEXT DebugReportCallbackEXT
-		(
-			PFN_vkDebugReportCallbackEXT pfnCallback = nullptr,
-			VkDebugReportFlagsEXT        flags       = 0,
-			void*                        pUserData   = nullptr,
-			const void*                  pNext       = nullptr,
-			const VkAllocationCallbacks* pAllocator  = nullptr
-		)
-		{
-			VkDebugReportCallbackCreateInfoEXT info =
-			{
-				VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
-				pNext,
-				flags,
-				pfnCallback,
-				pUserData,
-			};
-
-			VkDebugReportCallbackEXT report_callback = VK_NULL_HANDLE;
-
-			vkCreateDebugReportCallbackEXT(handle, &info, pAllocator, &report_callback);
-
-			return report_callback;
-		}
 
 		void retrieveAvailableDevices (void)
 		{
@@ -574,7 +438,7 @@ namespace RDTY::VULKAN::HELPERS
 				ppEnabledExtensionNames,
 			};
 
-			if (loadApiFunctions)
+			// if (loadApiFunctions)
 			{
 				loadSharedLibrary();
 
@@ -587,10 +451,6 @@ namespace RDTY::VULKAN::HELPERS
 			// {
 				loadInstanceFunctions(handle);
 			// }
-
-			// #ifdef DEBUG
-			// 	RS_VULKAN_MACRO_CREATE_DEBUG_REPORT_CALLBACKS(handle)
-			// #endif
 
 			retrieveAvailableDevices();
 		}
@@ -654,10 +514,6 @@ namespace RDTY::VULKAN::HELPERS
 			}
 
 			surfaces.resize(0);
-
-			// #ifdef DEBUG
-			// 	RS_VULKAN_MACRO_DESTROY_DEBUG_REPORT_CALLBACKS(handle);
-			// #endif
 
 			vkDestroyInstance(handle, nullptr);
 
@@ -2118,10 +1974,6 @@ namespace RDTY::VULKAN::HELPERS
 
 
 
-// #undef RS_VULKAN_MACRO_DESTROY_DEBUG_REPORT_CALLBACKS
-// #undef RS_VULKAN_MACRO_CREATE_DEBUG_REPORT_CALLBACKS
-// #undef RS_VULKAN_MACRO_DECLARE_DEBUG_REPORT_CALLBACKS
-
 #undef SHARED_LIBRARY_FREE
 #undef SHARED_LIBRARY_LOAD
 #undef SHARED_LIBRARY_MODULE_INIT_VALUE
@@ -2169,9 +2021,10 @@ namespace RDTY
 					result.insert({ std::string(physical_device_properties.deviceName), i });
 				}
 
-				delete[] inst.physical_devices;
+				// delete[] inst.physical_devices;
 
-				vkDestroyInstance(inst.handle, nullptr);
+				// vkDestroyInstance(inst.handle, nullptr);
+				inst.destroy();
 
 				return result;
 			}
@@ -2224,7 +2077,7 @@ namespace RDTY
 
 
 			// virtual void endLoop (void) = 0;
-			// virtual void destroy (void) = 0;
+			virtual void destroy (void) override final;
 		};
 
 
@@ -2254,7 +2107,7 @@ namespace RDTY
 
 
 			virtual void endLoop (void) override;
-			virtual void destroy (void) override;
+			// virtual void destroy (void) override;
 		};
 
 
@@ -2273,32 +2126,18 @@ namespace RDTY
 
 
 			virtual void endLoop (void) override;
-			virtual void destroy (void) override;
+			// virtual void destroy (void) override;
 		};
 
 
 
 		struct Uniform
 		{
-			// uniform_update_t functions
-			// static void uniformMatrix4fv (Uniform*);
-
-
-
 			RendererBase* renderer {};
 			WRAPPERS::Uniform* wrapper {};
 
-			// GLint location {};
-
-			// GLint locaiton {};
-
-			// using uniform_update_t = void (*) (Uniform*);
-
-			// uniform_update_t update {};
 
 
-
-			// Isn't Renderer* parameter needed?
 			Uniform (RendererBase*, WRAPPERS::Uniform*);
 		};
 
@@ -2460,15 +2299,15 @@ namespace RDTY
 		{
 			T* instance {};
 
-			if (wrapper->vulkan_impl)
+			if (wrapper->impl_vulkan)
 			{
-				instance = static_cast<T*>(wrapper->vulkan_impl);
+				instance = static_cast<T*>(wrapper->impl_vulkan);
 			}
 			else
 			{
 				instance = new T { renderer, wrapper };
 
-				wrapper->vulkan_impl = instance;
+				wrapper->impl_vulkan = instance;
 			}
 
 			return instance;

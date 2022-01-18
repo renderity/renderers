@@ -2,34 +2,19 @@
 
 #include "renderers/src/vulkan/vulkan.h"
 
-// using namespace RDTY::VULKAN::WRAPPERS;
+
+
+#if defined(__linux__)
+	#define SHARED_LIBRARY_MODULE_TYPE void*
+#elif defined(_WIN64)
+	#define SHARED_LIBRARY_MODULE_TYPE HMODULE
+#endif
 
 
 
 #include <iostream>
 using std::cout;
 using std::endl;
-
-
-
-// #define VK_NO_PROTOTYPES
-// #include "vulkan/vulkan.h"
-
-
-
-#if defined(__linux__)
-	#define SHARED_LIBRARY_MODULE_TYPE void*
-	// #define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
-	// #define SHARED_LIBRARY_LOAD dlopen("libvulkan.so.1", RTLD_LAZY)
-	// #define SHARED_LIBRARY_LOAD_FUNCTION dlsym
-	// #define SHARED_LIBRARY_FREE dlclose
-#elif defined(_WIN64)
-	#define SHARED_LIBRARY_MODULE_TYPE HMODULE
-	// #define SHARED_LIBRARY_MODULE_INIT_VALUE 0
-	// #define SHARED_LIBRARY_LOAD LoadLibrary("vulkan-1.dll")
-	// #define SHARED_LIBRARY_LOAD_FUNCTION GetProcAddress
-	// #define SHARED_LIBRARY_FREE FreeLibrary
-#endif
 
 
 
@@ -54,9 +39,6 @@ DECL_PROC(vkGetPhysicalDeviceFormatProperties);
 
 DECL_PROC(vkGetDeviceProcAddr);
 DECL_PROC(vkCreateDevice);
-
-DECL_PROC(vkCreateDebugReportCallbackEXT);
-DECL_PROC(vkDestroyDebugReportCallbackEXT);
 
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
 	DECL_PROC(vkCreateXlibSurfaceKHR);
@@ -166,7 +148,7 @@ DECL_PROC(vkDestroyDescriptorSetLayout);
 
 
 
-std::vector<uint32_t> QWE (const char* glsl_code, glslang_stage_t stage)
+std::vector<uint32_t> compileGlslToSpirv (const char* glsl_code, glslang_stage_t stage)
 {
 	const char* shaderCodeVertex = glsl_code;
 
@@ -177,61 +159,61 @@ std::vector<uint32_t> QWE (const char* glsl_code, glslang_stage_t stage)
 
 	const glslang_input_t input
 	{
-			.language = GLSLANG_SOURCE_GLSL,
-			.stage = stage,
-			.client = GLSLANG_CLIENT_VULKAN,
-			.client_version = GLSLANG_TARGET_VULKAN_1_2,
-			.target_language = GLSLANG_TARGET_SPV,
-			.target_language_version = GLSLANG_TARGET_SPV_1_3,
-			.code = shaderCodeVertex,
-			.default_version = 100,
-			.default_profile = GLSLANG_NO_PROFILE,
-			.force_default_version_and_profile = false,
-			.forward_compatible = false,
-			.messages = GLSLANG_MSG_DEFAULT_BIT,
-			.resource = &resource,
+		.language = GLSLANG_SOURCE_GLSL,
+		.stage = stage,
+		.client = GLSLANG_CLIENT_VULKAN,
+		.client_version = GLSLANG_TARGET_VULKAN_1_2,
+		.target_language = GLSLANG_TARGET_SPV,
+		.target_language_version = GLSLANG_TARGET_SPV_1_3,
+		.code = shaderCodeVertex,
+		.default_version = 100,
+		.default_profile = GLSLANG_NO_PROFILE,
+		.force_default_version_and_profile = false,
+		.forward_compatible = false,
+		.messages = GLSLANG_MSG_DEFAULT_BIT,
+		.resource = &resource,
 	};
 
 	glslang_initialize_process();
 
-	glslang_shader_t* shader = glslang_shader_create( &input );
+	glslang_shader_t* shader = glslang_shader_create(&input);
 
-	if ( !glslang_shader_preprocess(shader, &input) )
+	if (!glslang_shader_preprocess(shader, &input))
 	{
-			// use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+		// use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+
 		cout << glslang_shader_get_info_log(shader) << endl;
 		cout << glslang_shader_get_info_debug_log(shader) << endl;
 	}
 
-	if ( !glslang_shader_parse(shader, &input) )
+	if (!glslang_shader_parse(shader, &input))
 	{
-			// use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+		// use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+
 		cout << glslang_shader_get_info_log(shader) << endl;
 		cout << glslang_shader_get_info_debug_log(shader) << endl;
 	}
 
 	glslang_program_t* program = glslang_program_create();
-	glslang_program_add_shader( program, shader );
+
+	glslang_program_add_shader(program, shader);
 
 	if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
 	{
-			// use glslang_program_get_info_log() and glslang_program_get_info_debug_log();
+		// use glslang_program_get_info_log() and glslang_program_get_info_debug_log();
 
 		cout << glslang_program_get_info_log(program) << endl;
 		cout << glslang_program_get_info_debug_log(program) << endl;
 	}
 
-	glslang_program_SPIRV_generate( program, input.stage );
+	glslang_program_SPIRV_generate(program, input.stage);
 
-	if ( glslang_program_SPIRV_get_messages(program) )
+	if (glslang_program_SPIRV_get_messages(program))
 	{
-			printf("%s", glslang_program_SPIRV_get_messages(program));
+		printf("%s", glslang_program_SPIRV_get_messages(program));
 	}
 
-	// .codeSize = glslang_program_SPIRV_get_size(program) * sizeof(unsigned int),
-	// .pCode    = glslang_program_SPIRV_get_ptr(program),
-
-	glslang_shader_delete( shader );
+	glslang_shader_delete(shader);
 
 	std::vector<uint32_t> result(glslang_program_SPIRV_get_size(program));
 
@@ -245,63 +227,9 @@ std::vector<uint32_t> QWE (const char* glsl_code, glslang_stage_t stage)
 namespace RDTY::VULKAN::HELPERS
 {
 	SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle {};
-
-
-
-	// #ifdef DEBUG
-	// 	#define DEBUG_REPORT_ARGS \
-	// 		\
-	// 		VkDebugReportFlagsEXT      flags,\
-	// 		VkDebugReportObjectTypeEXT objectType,\
-	// 		uint64_t                   object,\
-	// 		size_t                     location,\
-	// 		int32_t                    messageCode,\
-	// 		const char*                pLayerPrefix,\
-	// 		const char*                pMessage,\
-	// 		void*                      pUserData
-
-	// 	VkBool32 reportError(DEBUG_REPORT_ARGS)
-	// 	{
-	// 		printf("VALIDATION LAYER ERROR: %s\n", pMessage);
-
-	// 		return VK_FALSE;
-	// 	}
-
-	// 	VkBool32 reportInfo(DEBUG_REPORT_ARGS)
-	// 	{
-	// 		printf("VALIDATION LAYER INFORMATION: %s\n", pMessage);
-
-	// 		return VK_FALSE;
-	// 	}
-
-	// 	VkBool32 reportWarn(DEBUG_REPORT_ARGS)
-	// 	{
-	// 		printf("VALIDATION LAYER WARNING: %s\n", pMessage);
-
-	// 		return VK_FALSE;
-	// 	}
-
-	// 	VkBool32 reportPerf(DEBUG_REPORT_ARGS)
-	// 	{
-	// 		printf("VALIDATION LAYER PERFORMANCE WARNING: %s\n", pMessage);
-
-	// 		return VK_FALSE;
-	// 	}
-
-	// 	VkBool32 reportDebug(DEBUG_REPORT_ARGS)
-	// 	{
-	// 		printf("VALIDATION LAYER DEBUG: %s\n", pMessage);
-
-	// 		return VK_FALSE;
-	// 	}
-
-	// 	#undef DEBUG_REPORT_ARGS
-	// #endif
 }
 
 
-
-SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle2 {};
 
 #undef SHARED_LIBRARY_MODULE_TYPE
 
@@ -318,6 +246,26 @@ namespace RDTY
 			type = RDTY::RENDERERS::RendererType::VULKAN;
 
 			wrapper = _wrapper;
+		}
+
+		void RendererBase::destroy (void)
+		{
+			vkDeviceWaitIdle(device.handle);
+
+			device.destroy();
+
+			inst.destroy();
+
+			if (window)
+			{
+				glfwDestroyWindow(window);
+				glfwTerminate();
+			}
+
+			for (WRAPPERS::Base* wrapper : wrappers)
+			{
+				wrapper->impl_vulkan = nullptr;
+			}
 		}
 
 
@@ -339,42 +287,25 @@ namespace RDTY
 			curr_image = 0;
 
 			const char* inst_exts []
-			// #ifdef DEBUG
-			// 	#if defined(__linux__)
-			// 		{ "VK_KHR_surface", "VK_KHR_xlib_surface", VK_EXT_DEBUG_REPORT_EXTENSION_NAME };
-			// 	#elif defined(_WIN64)
-			// 		{ "VK_KHR_surface", "VK_KHR_win32_surface", VK_EXT_DEBUG_REPORT_EXTENSION_NAME };
-			// 	#endif
-			// #else
-				#if defined(__linux__)
-					{ "VK_KHR_surface", "VK_KHR_xlib_surface" };
-				#elif defined(_WIN64)
-					{ "VK_KHR_surface", "VK_KHR_win32_surface" };
-				#endif
-			// #endif
+			#if defined(__linux__)
+				{ "VK_KHR_surface", "VK_KHR_xlib_surface" };
+			#elif defined(_WIN64)
+				{ "VK_KHR_surface", "VK_KHR_win32_surface" };
+			#endif
 
 			VkApplicationInfo app_i { AppI() };
 
-			// #ifdef DEBUG
-			// 	const char* inst_layers [] { "VK_LAYER_KHRONOS_validation" };
+			// if (RendererBase::loaded)
+			// {
+			// 	inst.create(&app_i, 0, nullptr, 2, inst_exts, false);
+			// }
+			// else
+			// {
+			// 	inst.create(&app_i, 0, nullptr, 2, inst_exts);
 
-			// 	inst.create(&app_i, 1, inst_layers, 3, inst_exts);
-			// #else
-			if (RendererBase::loaded)
-			{
-				inst.create(&app_i, 0, nullptr, 2, inst_exts, false);
-			}
-			else
-			{
-				inst.create(&app_i, 0, nullptr, 2, inst_exts);
-
-				RendererBase::loaded = true;
-			}
-			// #endif
-
-
-
-			// cout << inst.physical_devices << endl;
+			// 	RendererBase::loaded = true;
+			// }
+			inst.create(&app_i, 0, nullptr, 0, nullptr);
 
 			// VkPhysicalDevice _physical_device { physical_device == VK_NULL_HANDLE ? inst.physical_devices[0] : physical_device };
 			VkPhysicalDevice _physical_device { inst.physical_devices[physical_device_index] };
@@ -696,18 +627,26 @@ namespace RDTY
 		{
 		}
 
-		void Renderer::destroy (void)
-		{
-			vkDeviceWaitIdle(device.handle);
+		// void Renderer::destroy (void)
+		// {
+		// 	vkDeviceWaitIdle(device.handle);
 
-			device.destroy();
+		// 	device.destroy();
 
-			inst.destroy();
+		// 	inst.destroy();
 
-			glfwDestroyWindow(window);
+		// 	if (window)
+		// 	{
+		// 		glfwDestroyWindow(window);
+		// 	}
 
-			glfwTerminate();
-		}
+		// 	glfwTerminate();
+
+		// 	for (WRAPPERS::Base* wrapper : wrappers)
+		// 	{
+		// 		wrapper->impl_vulkan = nullptr;
+		// 	}
+		// }
 
 
 
@@ -716,6 +655,16 @@ namespace RDTY
 		{
 			VkApplicationInfo app_i { AppI() };
 
+			// if (RendererBase::loaded)
+			// {
+			// 	inst.create(&app_i, 0, nullptr, 0, nullptr, false);
+			// }
+			// else
+			// {
+			// 	inst.create(&app_i, 0, nullptr, 0, nullptr);
+
+			// 	RendererBase::loaded = true;
+			// }
 			inst.create(&app_i, 0, nullptr, 0, nullptr);
 
 			// VkPhysicalDevice _physical_device { physical_device == VK_NULL_HANDLE ? inst.physical_devices[0] : physical_device };
@@ -951,14 +900,14 @@ namespace RDTY
 		{
 		}
 
-		void RendererOffscreen::destroy (void)
-		{
-			vkDeviceWaitIdle(device.handle);
+		// void RendererOffscreen::destroy (void)
+		// {
+		// 	vkDeviceWaitIdle(device.handle);
 
-			device.destroy();
+		// 	device.destroy();
 
-			inst.destroy();
-		}
+		// 	inst.destroy();
+		// }
 
 
 
@@ -995,15 +944,15 @@ namespace RDTY
 			{
 				// Uniform* uniform {};
 
-				// if (uniform_wrapper->vulkan_impl)
+				// if (uniform_wrapper->impl_vulkan)
 				// {
-				// 	uniform = static_cast<Uniform*>(uniform_wrapper->vulkan_impl);
+				// 	uniform = static_cast<Uniform*>(uniform_wrapper->impl_vulkan);
 				// }
 				// else
 				// {
 				// 	uniform = new Uniform { renderer, uniform_wrapper };
 
-				// 	uniform_wrapper->vulkan_impl = uniform;
+				// 	uniform_wrapper->impl_vulkan = uniform;
 				// }
 
 				Uniform* uniform { getInstance<Uniform, WRAPPERS::Uniform>(renderer, uniform_wrapper) };
@@ -1075,15 +1024,15 @@ namespace RDTY
 			{
 				// UniformBlock* binding {};
 
-				// if (binding_wrapper->vulkan_impl)
+				// if (binding_wrapper->impl_vulkan)
 				// {
-				// 	binding = static_cast<UniformBlock*>(binding_wrapper->vulkan_impl);
+				// 	binding = static_cast<UniformBlock*>(binding_wrapper->impl_vulkan);
 				// }
 				// else
 				// {
 				// 	binding = new UniformBlock { renderer, binding_wrapper } ;
 
-				// 	binding_wrapper->vulkan_impl = binding;
+				// 	binding_wrapper->impl_vulkan = binding;
 				// }
 
 				UniformBlock* binding { getInstance<UniformBlock, WRAPPERS::UniformBlock>(renderer, binding_wrapper) };
@@ -1252,8 +1201,8 @@ namespace RDTY
 
 				case MATERIAL::ShaderUsage::GLSL_VULKAN:
 				{
-					std::vector<uint32_t> spirv_code_vertex = QWE(wrapper->glsl_vulkan_code_vertex.c_str(), GLSLANG_STAGE_VERTEX);
-					std::vector<uint32_t> spirv_code_fragment = QWE(wrapper->glsl_vulkan_code_fragment.c_str(), GLSLANG_STAGE_FRAGMENT);
+					std::vector<uint32_t> spirv_code_vertex = compileGlslToSpirv(wrapper->glsl_vulkan_code_vertex.c_str(), GLSLANG_STAGE_VERTEX);
+					std::vector<uint32_t> spirv_code_fragment = compileGlslToSpirv(wrapper->glsl_vulkan_code_fragment.c_str(), GLSLANG_STAGE_FRAGMENT);
 
 					ppl_stages[0] = PplShader(VK_SHADER_STAGE_VERTEX_BIT, renderer->device.Shader(spirv_code_vertex.size() * sizeof(uint32_t), spirv_code_vertex.data()));
 					ppl_stages[1] = PplShader(VK_SHADER_STAGE_FRAGMENT_BIT, renderer->device.Shader(spirv_code_fragment.size() * sizeof(uint32_t), spirv_code_fragment.data()));

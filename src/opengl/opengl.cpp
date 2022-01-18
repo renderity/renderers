@@ -56,6 +56,19 @@ namespace RDTY
 			glDepthFunc(GL_LESS);
 		}
 
+		void RendererBase::destroy (void)
+		{
+			glFinish();
+
+			glfwDestroyWindow(window);
+			glfwTerminate();
+
+			for (WRAPPERS::Base* wrapper : wrappers)
+			{
+				wrapper->impl_opengl = nullptr;
+			}
+		}
+
 
 
 		Renderer::Renderer (WRAPPERS::Renderer* _wrapper) : RendererBase(_wrapper)
@@ -68,11 +81,13 @@ namespace RDTY
 			glfwSwapBuffers(window);
 		}
 
-		void Renderer::destroy (void)
-		{
-			glfwDestroyWindow(window);
-			glfwTerminate();
-		}
+		// void Renderer::destroy (void)
+		// {
+		// 	glFinish();
+
+		// 	glfwDestroyWindow(window);
+		// 	glfwTerminate();
+		// }
 
 
 
@@ -151,9 +166,13 @@ namespace RDTY
 			// glReadBuffer(GL_FRONT);
 		}
 
-		void RendererOffscreen::destroy (void)
-		{
-		}
+		// void RendererOffscreen::destroy (void)
+		// {
+		// 	glFinish();
+
+		// 	glfwDestroyWindow(window);
+		// 	glfwTerminate();
+		// }
 
 
 
