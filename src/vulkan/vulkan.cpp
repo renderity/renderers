@@ -226,7 +226,7 @@ std::vector<uint32_t> compileGlslToSpirv (const char* glsl_code, glslang_stage_t
 
 namespace RDTY::VULKAN::HELPERS
 {
-	SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle {};
+	SHARED_LIBRARY_MODULE_TYPE vulkan_loader {};
 }
 
 
@@ -243,8 +243,6 @@ namespace RDTY
 
 		RendererBase::RendererBase (WRAPPERS::Renderer* _wrapper)
 		{
-			type = RDTY::RENDERERS::RendererType::VULKAN;
-
 			wrapper = _wrapper;
 		}
 
@@ -665,27 +663,6 @@ namespace RDTY
 			}
 		}
 
-		// void Renderer::destroy (void)
-		// {
-		// 	vkDeviceWaitIdle(device.handle);
-
-		// 	device.destroy();
-
-		// 	inst.destroy();
-
-		// 	if (window)
-		// 	{
-		// 		glfwDestroyWindow(window);
-		// 	}
-
-		// 	glfwTerminate();
-
-		// 	for (WRAPPERS::Base* wrapper : wrappers)
-		// 	{
-		// 		wrapper->impl_vulkan = nullptr;
-		// 	}
-		// }
-
 
 
 		// RendererOffscreen::RendererOffscreen (WRAPPERS::Renderer* _wrapper, const VkPhysicalDevice& physical_device) : RendererBase(_wrapper)
@@ -783,8 +760,6 @@ namespace RDTY
 				);
 
 
-
-			const uint32_t qfi [] { device.graphics_queue_family_index, device.present_queue_family_index };
 
 			uint64_t image_count { 1 };
 
@@ -975,15 +950,6 @@ namespace RDTY
 			vkDeviceWaitIdle(device.handle);
 		}
 
-		// void RendererOffscreen::destroy (void)
-		// {
-		// 	vkDeviceWaitIdle(device.handle);
-
-		// 	device.destroy();
-
-		// 	inst.destroy();
-		// }
-
 
 
 		Uniform::Uniform (RendererBase* _renderer, WRAPPERS::Uniform* _wrapper)
@@ -1017,19 +983,6 @@ namespace RDTY
 
 			for (WRAPPERS::Uniform* uniform_wrapper : wrapper->uniforms)
 			{
-				// Uniform* uniform {};
-
-				// if (uniform_wrapper->impl_vulkan)
-				// {
-				// 	uniform = static_cast<Uniform*>(uniform_wrapper->impl_vulkan);
-				// }
-				// else
-				// {
-				// 	uniform = new Uniform { renderer, uniform_wrapper };
-
-				// 	uniform_wrapper->impl_vulkan = uniform;
-				// }
-
 				Uniform* uniform { getInstance<Uniform, WRAPPERS::Uniform>(renderer, uniform_wrapper) };
 
 				uniforms.push_back(uniform);
@@ -1179,19 +1132,43 @@ namespace RDTY
 			VK_FRONT_FACE_CLOCKWISE,
 		};
 
+		const VkBool32 Material::BLEND_ENABLED [2]
+		{
+			VK_FALSE,
+			VK_TRUE,
+		};
+
+		const VkBlendOp Material::BLEND_OP [5]
+		{
+			VK_BLEND_OP_ADD,
+			VK_BLEND_OP_SUBTRACT,
+			VK_BLEND_OP_REVERSE_SUBTRACT,
+			VK_BLEND_OP_MIN,
+			VK_BLEND_OP_MAX,
+
+			// ...and many others available via extensions.
+		};
+
+		const VkBlendFactor Material::BLEND_FACTOR [2]
+		{
+			VK_BLEND_FACTOR_ZERO,
+			VK_BLEND_FACTOR_ONE,
+		};
+
 		Material::Material (RendererBase* _renderer, WRAPPERS::Material* _wrapper, const MATERIAL::ShaderUsage shader_usage)
 		{
-			renderer = _renderer;
-			wrapper = _wrapper;
+			{
+				renderer = _renderer;
+				wrapper = _wrapper;
+			}
 
 
 
 			topology = Material::TOPOLOGY[static_cast<size_t>(wrapper->topology)];
-			front_face = Material::FRONT_FACE[static_cast<size_t>(wrapper->front_face)];
-
-
 
 			VkPipelineInputAssemblyStateCreateInfo default_ppl_input_asm { PplInputAsm(topology, VK_FALSE) };
+
+
 
 			VkPipelineTessellationStateCreateInfo default_ppl_tess { PplTess(0, 0) };
 
@@ -1204,7 +1181,14 @@ namespace RDTY
 
 			VkPipelineMultisampleStateCreateInfo default_ppl_sample { PplSample(VK_SAMPLE_COUNT_1_BIT, VK_FALSE, 0.0f, nullptr, VK_FALSE, VK_FALSE) };
 
-			VkPipelineRasterizationStateCreateInfo default_ppl_rast { PplRast(VK_FALSE, VK_FALSE, VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, front_face, VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f) };
+
+
+			front_face = Material::FRONT_FACE[static_cast<size_t>(wrapper->front_face)];
+
+			VkPipelineRasterizationStateCreateInfo default_ppl_rast
+			{ PplRast(VK_FALSE, VK_FALSE, VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, front_face, VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f) };
+
+
 
 			VkStencilOpState default_ppl_stenc { VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_COMPARE_OP_ALWAYS, 0, 0, 0 };
 
@@ -1226,11 +1210,23 @@ namespace RDTY
 
 			// VkPipelineDepthStencilStateCreateInfo default_ppl_depth_stenc { PplDepthStenc(VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE, { 0 }, { 0 }, 0.0f, 1.0f) };
 
+
+
+			blend_enabled = Material::BLEND_ENABLED[static_cast<size_t>(wrapper->blend_enabled)];
+
+			blend_color_op = Material::BLEND_OP[static_cast<size_t>(wrapper->blend_color_op)];
+			blend_color_factor_src = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_color_factor_src)];
+			blend_color_factor_dst = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_color_factor_dst)];
+
+			blend_alpha_op = Material::BLEND_OP[static_cast<size_t>(wrapper->blend_alpha_op)];
+			blend_alpha_factor_src = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_alpha_factor_src)];
+			blend_alpha_factor_dst = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_alpha_factor_dst)];
+
 			VkPipelineColorBlendAttachmentState blend_attach
 			{
-				VK_FALSE,
-				VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD,
-				VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ZERO, VK_BLEND_OP_ADD,
+				blend_enabled,
+				blend_color_factor_src, blend_color_factor_dst, blend_color_op,
+				blend_alpha_factor_src, blend_alpha_factor_dst, blend_alpha_op,
 				VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
 			};
 
@@ -1244,6 +1240,8 @@ namespace RDTY
 					0.0f, 0.0f, 0.0f, 0.0f
 				)
 			};
+
+
 
 			VkPipelineDynamicStateCreateInfo default_ppl_dyn { PplDyn(0, nullptr) };
 
@@ -1274,6 +1272,8 @@ namespace RDTY
 
 				default: break;
 			}
+
+
 
 			VkVertexInputBindingDescription vertex_binding { 0, 12, VK_VERTEX_INPUT_RATE_VERTEX };
 			VkVertexInputAttributeDescription vertex_attr { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 };

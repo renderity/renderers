@@ -12,21 +12,20 @@
 #if defined(__linux__)
 	#define SHARED_LIBRARY_MODULE_TYPE void*
 	#define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
-	#define SHARED_LIBRARY_LOAD dlopen("libvulkan.so.1", RTLD_LAZY)
 	#define SHARED_LIBRARY_LOAD_FUNCTION dlsym
 	#define SHARED_LIBRARY_FREE dlclose
+	#define LOAD_VULKAN_LOADER() dlopen("libvulkan.so.1", RTLD_LAZY)
 #elif defined(_WIN64)
 	#define SHARED_LIBRARY_MODULE_TYPE HMODULE
 	#define SHARED_LIBRARY_MODULE_INIT_VALUE 0
-	#define SHARED_LIBRARY_LOAD LoadLibrary("vulkan-1.dll")
 	#define SHARED_LIBRARY_LOAD_FUNCTION GetProcAddress
 	#define SHARED_LIBRARY_FREE FreeLibrary
+	#define LOAD_VULKAN_LOADER() LoadLibrary("vulkan-1.dll")
 #endif
 
 
 
-// size_t
-#include <cstddef>
+#include <cstddef> // size_t
 #include <vector>
 #include <map>
 
@@ -42,14 +41,14 @@
 	#include <Windows.h>
 #endif
 
-#include "renderers/src/glfw/glfw-3.3.5/include/GLFW/glfw3.h"
-#include "renderers/src/glfw/glfw-3.3.5/include/GLFW/glfw3native.h"
-#include "renderers/src/base/renderer.h"
-
 #define VK_NO_PROTOTYPES
 #include "vulkan/vulkan.h"
 
 #include "glslang/Include/glslang_c_interface.h"
+
+#include "renderers/src/glfw/glfw-3.3.5/include/GLFW/glfw3.h"
+#include "renderers/src/glfw/glfw-3.3.5/include/GLFW/glfw3native.h"
+#include "renderers/src/base/renderer.h"
 
 #include "wrappers/src/renderer/renderer.h"
 #include "wrappers/src/uniform/uniform.h"
@@ -203,30 +202,30 @@ std::vector<uint32_t> compileGlslToSpirv (const char*, glslang_stage_t);
 
 namespace RDTY::VULKAN::HELPERS
 {
-	extern SHARED_LIBRARY_MODULE_TYPE shared_library_module_handle;
+	extern SHARED_LIBRARY_MODULE_TYPE vulkan_loader;
 
 
 
 	INLINE void freeSharedLibrary (void)
 	{
-		SHARED_LIBRARY_FREE(shared_library_module_handle);
+		SHARED_LIBRARY_FREE(vulkan_loader);
 
-		shared_library_module_handle = SHARED_LIBRARY_MODULE_INIT_VALUE;
+		vulkan_loader = SHARED_LIBRARY_MODULE_INIT_VALUE;
 	}
 
 	INLINE void loadSharedLibrary (void)
 	{
-		if (shared_library_module_handle)
+		if (vulkan_loader)
 		{
 		  freeSharedLibrary();
 		}
 
-		shared_library_module_handle = SHARED_LIBRARY_LOAD;
+		vulkan_loader = LOAD_VULKAN_LOADER();
 	}
 
 	INLINE void loadGlobalFunctions (void)
 	{
-		vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr) SHARED_LIBRARY_LOAD_FUNCTION(shared_library_module_handle, "vkGetInstanceProcAddr");
+		vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr) SHARED_LIBRARY_LOAD_FUNCTION(vulkan_loader, "vkGetInstanceProcAddr");
 
 		#define GET_PROC_ADDR(name) name = (PFN_##name) vkGetInstanceProcAddr(nullptr, #name)
 
@@ -977,6 +976,7 @@ namespace RDTY::VULKAN::HELPERS
 		uint32_t                         present_queue_family_index  = -1;
 		uint64_t                         present_queue_count         = 0;
 
+		// TODO: add initializers {}
 		std::vector<VkRenderPass> render_passes;
 		std::vector<VkSwapchainKHR> swapchains;
 		std::vector<VkImageView> image_views;
@@ -1974,8 +1974,8 @@ namespace RDTY::VULKAN::HELPERS
 
 
 
+#undef LOAD_VULKAN_LOADER
 #undef SHARED_LIBRARY_FREE
-#undef SHARED_LIBRARY_LOAD
 #undef SHARED_LIBRARY_MODULE_INIT_VALUE
 #undef SHARED_LIBRARY_MODULE_TYPE
 
@@ -2238,6 +2238,10 @@ namespace RDTY
 			// VK_FRONT_FACE_CLOCKWISE = 1,
 			static const VkFrontFace FRONT_FACE [2];
 
+			static const VkBool32 BLEND_ENABLED [2];
+			static const VkBlendOp BLEND_OP [5];
+			static const VkBlendFactor BLEND_FACTOR [2];
+
 
 
 			RendererBase* renderer {};
@@ -2245,6 +2249,16 @@ namespace RDTY
 
 			VkPrimitiveTopology topology {};
 			VkFrontFace front_face {};
+
+			VkBool32 blend_enabled {};
+
+			VkBlendOp blend_color_op {};
+			VkBlendFactor blend_color_factor_src {};
+			VkBlendFactor blend_color_factor_dst {};
+
+			VkBlendOp blend_alpha_op {};
+			VkBlendFactor blend_alpha_factor_src {};
+			VkBlendFactor blend_alpha_factor_dst {};
 
 			VkPipelineLayout ppl_layout {};
 			VkPipeline ppl {};
@@ -2309,6 +2323,29 @@ namespace RDTY
 				wrapper->impl_vulkan = instance;
 
 				renderer->wrappers.push_back(wrapper);
+			}
+
+			return instance;
+		}
+
+		template <class T, class WrapperT>
+		T* getInstance (RDTY::RENDERERS::Renderer* renderer, WrapperT* wrapper)
+		{
+			T* instance {};
+
+			if (wrapper->impl_vulkan)
+			{
+				instance = static_cast<T*>(wrapper->impl_vulkan);
+			}
+			else
+			{
+				RendererBase* _renderer = dynamic_cast<RendererBase*>(renderer);
+
+				instance = new T { _renderer, wrapper };
+
+				wrapper->impl_vulkan = instance;
+
+				_renderer->wrappers.push_back(wrapper);
 			}
 
 			return instance;

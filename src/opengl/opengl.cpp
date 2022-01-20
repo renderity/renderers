@@ -16,14 +16,6 @@ namespace RDTY
 
 		RendererBase::RendererBase (WRAPPERS::Renderer* _wrapper)
 		{
-			// cout << (char *) glGetString(GL_VERSION) << endl;
-			// cout << (char *) glGetString(GL_VENDOR) << endl;
-			// cout << (char *) glGetString(GL_RENDERER) << endl;
-
-
-
-			type = RDTY::RENDERERS::RendererType::OPENGL;
-
 			wrapper = _wrapper;
 
 
@@ -244,6 +236,27 @@ namespace RDTY
 			GL_CW,
 		};
 
+		const bool Material::BLEND_ENABLED [2]
+		{
+			false,
+			true,
+		};
+
+		const GLenum Material::BLEND_OP [5]
+		{
+			GL_FUNC_ADD,
+			GL_FUNC_SUBTRACT,
+			GL_FUNC_REVERSE_SUBTRACT,
+			GL_MIN,
+			GL_MAX,
+		};
+
+		const GLenum Material::BLEND_FACTOR [2]
+		{
+			GL_ZERO,
+			GL_ONE,
+		};
+
 		Material::Material (RendererBase* _renderer, WRAPPERS::Material* _wrapper)
 		{
 			renderer = _renderer;
@@ -253,7 +266,18 @@ namespace RDTY
 
 			// Why is not wrapper->topology an integer?
 			topology = Material::TOPOLOGY[static_cast<size_t>(wrapper->topology)];
+
 			front_face = Material::FRONT_FACE[static_cast<size_t>(wrapper->front_face)];
+
+			blend_enabled = Material::BLEND_ENABLED[static_cast<size_t>(wrapper->blend_enabled)];
+
+			blend_color_op = Material::BLEND_OP[static_cast<size_t>(wrapper->blend_color_op)];
+			blend_color_factor_src = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_color_factor_src)];
+			blend_color_factor_dst = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_color_factor_dst)];
+
+			blend_alpha_op = Material::BLEND_OP[static_cast<size_t>(wrapper->blend_alpha_op)];
+			blend_alpha_factor_src = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_alpha_factor_src)];
+			blend_alpha_factor_dst = Material::BLEND_FACTOR[static_cast<size_t>(wrapper->blend_alpha_factor_dst)];
 
 
 
@@ -377,8 +401,28 @@ namespace RDTY
 		{
 			Material::used_instance = this;
 
-			glFrontFace(front_face);
 			glUseProgram(program);
+
+			glFrontFace(front_face);
+
+			if (blend_enabled)
+			{
+				glEnable(GL_BLEND);
+
+				glBlendEquationSeparate(blend_color_op, blend_alpha_op);
+
+				glBlendFuncSeparate
+				(
+					blend_color_factor_src,
+					blend_color_factor_dst,
+					blend_alpha_factor_src,
+					blend_alpha_factor_dst
+				);
+			}
+			else
+			{
+				glEnable(GL_BLEND);
+			}
 
 			// for (size_t i {}; i < uniforms.size(); ++i)
 			// {
