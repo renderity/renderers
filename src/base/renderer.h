@@ -3,8 +3,7 @@
 
 
 
-// size_t
-#include <cstddef>
+#include <cstddef> // size_t
 #include <vector>
 
 #include "wrappers/src/base/base.h"
@@ -12,34 +11,22 @@
 
 
 
-namespace RDTY
+namespace RDTY::RENDERERS
 {
-	namespace RENDERERS
+	struct Renderer
 	{
-		// TODO: remove?
-		enum class RendererType : size_t
-		{
-			VULKAN,
-			OPENGL,
-		};
+		WRAPPERS::Renderer* wrapper {};
+
+		std::vector<WRAPPERS::Base*> wrappers {};
+
+		void* pixel_data {};
 
 
 
-		struct Renderer
-		{
-			WRAPPERS::Renderer* wrapper {};
-
-			void* pixel_data {};
-
-			RendererType type {};
-
-			std::vector<WRAPPERS::Base*> wrappers {};
-
-			virtual void beginLoop (void) = 0;
-			virtual void endLoop (void) = 0;
-			virtual void destroy (void) = 0;
-		};
-	}
+		virtual void beginLoop (void) = 0;
+		virtual void endLoop (void) = 0;
+		virtual void destroy (void) = 0;
+	};
 }
 
 
