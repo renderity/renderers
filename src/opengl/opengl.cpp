@@ -285,10 +285,10 @@ namespace RDTY
 
 
 
-			const GLchar* _glsl4_code_vertex { wrapper->glsl4_code_vertex.c_str() };
+			const GLchar* _code_vertex_glsl { wrapper->code_vertex_glsl.c_str() };
 
 			GLuint shader_vertex = glCreateShader(GL_VERTEX_SHADER);
-			glShaderSource(shader_vertex, 1, &_glsl4_code_vertex, nullptr);
+			glShaderSource(shader_vertex, 1, &_code_vertex_glsl, nullptr);
 			glCompileShader(shader_vertex);
 
 			{
@@ -321,10 +321,10 @@ namespace RDTY
 
 
 
-			const GLchar* _glsl4_code_fragment { wrapper->glsl4_code_fragment.c_str() };
+			const GLchar* _code_fragment_glsl { wrapper->code_fragment_glsl.c_str() };
 
 			GLuint shader_fragment = glCreateShader(GL_FRAGMENT_SHADER);
-			glShaderSource(shader_fragment, 1, &_glsl4_code_fragment, nullptr);
+			glShaderSource(shader_fragment, 1, &_code_fragment_glsl, nullptr);
 			glCompileShader(shader_fragment);
 
 			{
@@ -451,7 +451,7 @@ namespace RDTY
 			(
 				Material::used_instance->topology,
 				wrapper->scene_vertex_data_offset,
-				wrapper->scene_vertex_data_length
+				wrapper->scene_vertex_data_size
 			);
 		}
 

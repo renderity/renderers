@@ -28,6 +28,13 @@
 				"file": "$(SRC)/opengl/opengl.cpp",
 				"watch_files":
 				[
+					"$(REPS)/renderity/wrappers/src/renderer/renderer.h",
+					"$(REPS)/renderity/wrappers/src/uniform/uniform.h",
+					"$(REPS)/renderity/wrappers/src/uniform-block/uniform-block.h",
+					"$(REPS)/renderity/wrappers/src/material/material.h",
+					"$(REPS)/renderity/wrappers/src/object/object.h",
+					"$(REPS)/renderity/wrappers/src/scene/scene.h",
+
 					"$(SRC)/base/renderer.h",
 					"$(SRC)/opengl/opengl.h"
 				]
@@ -37,6 +44,16 @@
 				"file": "$(SRC)/vulkan/vulkan.cpp",
 				"watch_files":
 				[
+					"$(REPS)/renderity/wrappers/src/renderer/renderer.h",
+					"$(REPS)/renderity/wrappers/src/uniform/uniform.h",
+					"$(REPS)/renderity/wrappers/src/descriptor-binding/descriptor-binding.h",
+					"$(REPS)/renderity/wrappers/src/uniform-block/uniform-block.h",
+					"$(REPS)/renderity/wrappers/src/descriptor-set/descriptor-set.h",
+					"$(REPS)/renderity/wrappers/src/material/material.h",
+					"$(REPS)/renderity/wrappers/src/object/object.h",
+					"$(REPS)/renderity/wrappers/src/scene/scene.h",
+
+					"$(SRC)/vulkan/helpers.h",
 					"$(SRC)/base/renderer.h",
 					"$(SRC)/vulkan/vulkan.h"
 				]

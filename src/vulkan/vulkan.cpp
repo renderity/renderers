@@ -1,4 +1,5 @@
 #include <cstring>
+#include <numeric>
 
 #include "renderers/src/vulkan/vulkan.h"
 
@@ -15,6 +16,22 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+
+
+
+template<class RT, class PT1, class PT2>
+RT getBitMask (std::vector<PT1> wrapper_set, PT2* renderer_set)
+{
+	RT acc {};
+
+	for (PT1 elm : wrapper_set)
+	{
+		cout << "getBitMask" << (size_t) elm << endl;
+		acc |= renderer_set[(size_t) elm];
+	}
+
+	return acc;
+}
 
 
 
@@ -148,9 +165,9 @@ DECL_PROC(vkDestroyDescriptorSetLayout);
 
 
 
-std::vector<uint32_t> compileGlslToSpirv (const char* glsl_code, glslang_stage_t stage)
+std::vector<uint32_t> compileGlslToSpirv (const char* code_glsl, glslang_stage_t stage)
 {
-	const char* shaderCodeVertex = glsl_code;
+	const char* shaderCodeVertex = code_glsl;
 
 	glslang_resource_t resource
 	{
@@ -368,7 +385,6 @@ namespace RDTY
 					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 				},
 
-
 				// depth
 				{
 					0,
@@ -467,16 +483,44 @@ namespace RDTY
 
 			for (uint64_t i = 0; i < swapchain_image_count; ++i)
 			{
-				swapchain_image_views[i] = device.ImageView
-				(
-					swapchain_images[i],
-					VK_IMAGE_VIEW_TYPE_2D,
-					VK_FORMAT_B8G8R8A8_UNORM,
-					VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
-					VK_IMAGE_ASPECT_COLOR_BIT,
-					0, 1,
-					0, 1
-				);
+				// swapchain_image_views[i] = device.ImageView
+				// (
+				// 	swapchain_images[i],
+				// 	VK_IMAGE_VIEW_TYPE_2D,
+				// 	VK_FORMAT_B8G8R8A8_UNORM,
+				// 	VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
+				// 	VK_IMAGE_ASPECT_COLOR_BIT,
+				// 	0, 1,
+				// 	0, 1
+				// );
+
+				swapchain_image_views[i] =
+					device.ImageView
+					({
+						.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+						// .pNext = nullptr,
+						// .flags = 0,
+						.image = swapchain_images[i],
+						.viewType = VK_IMAGE_VIEW_TYPE_2D,
+						.format = VK_FORMAT_B8G8R8A8_UNORM,
+
+						.components =
+						{
+							.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+							.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+							.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+							.a = VK_COMPONENT_SWIZZLE_IDENTITY,
+						},
+
+						.subresourceRange =
+						{
+							.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+							.baseMipLevel = 0,
+							.levelCount = 1,
+							.baseArrayLayer = 0,
+							.layerCount = 1,
+						},
+					});
 
 				render_images[i] = device.Image
 				(
@@ -628,8 +672,6 @@ namespace RDTY
 
 		void Renderer::beginLoop (void)
 		{
-			// memcpy(uniform_buffer_mem_addr + 64, ((void*) &orbit) + 64, 64);
-
 			vkAcquireNextImageKHR(device.handle, swapchain, 0xFFFFFFFF, image_available_semaphores[curr_image], VK_NULL_HANDLE, &image_indices[curr_image]);
 
 			// VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
@@ -639,6 +681,16 @@ namespace RDTY
 
 			vkBeginCommandBuffer(cmd_buffers[curr_image], &command_buffer_bi);
 		}
+
+		// void Renderer::beginRenderPass (const VkFramebuffer& framebuffer = VK_NULL_HANDLE)
+		// {
+		// 	const VkRenderPassBeginInfo render_pass_begin_info
+		// 	{
+		// 		RenderPassBeginI(render_pass, framebuffers[i], { 0, 0, 800, 600 }, 2, clear_value)
+		// 	};
+
+		// 	vkCmdBeginRenderPass(cmd_buffers[_renderer->curr_image], &_renderer->render_pass_bi[_renderer->curr_image], VK_SUBPASS_CONTENTS_INLINE);
+		// }
 
 		void Renderer::endLoop (void)
 		{
@@ -662,6 +714,11 @@ namespace RDTY
 				curr_image = 0;
 			}
 		}
+
+		// void Renderer::beginRenderPass (const VkRenderPassBeginInfo&& render_pass_begin_info)
+		// {
+		// 	vkCmdBeginRenderPass(cmd_buffers[curr_image], &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+		// }
 
 
 
@@ -947,7 +1004,7 @@ namespace RDTY
 
 			vkQueueSubmit(graphics_queue, 1, &submit_i[0], nullptr);
 
-			vkDeviceWaitIdle(device.handle);
+			vkQueueWaitIdle(graphics_queue);
 		}
 
 
@@ -959,6 +1016,13 @@ namespace RDTY
 		}
 
 
+
+		const VkShaderStageFlagBits UniformBlock::VISIBILITY [3]
+		{
+			VK_SHADER_STAGE_VERTEX_BIT,
+			VK_SHADER_STAGE_FRAGMENT_BIT,
+			VK_SHADER_STAGE_COMPUTE_BIT,
+		};
 
 		UniformBlock::UniformBlock (RendererBase* _renderer, WRAPPERS::UniformBlock* _wrapper)
 		{
@@ -979,6 +1043,8 @@ namespace RDTY
 
 			layout.binding = wrapper->binding;
 
+			layout.stageFlags = getBitMask<VkShaderStageFlags>(wrapper->visibility, UniformBlock::VISIBILITY);
+
 
 
 			for (WRAPPERS::Uniform* uniform_wrapper : wrapper->uniforms)
@@ -994,15 +1060,15 @@ namespace RDTY
 
 			buffer = renderer->device.Buffer(buffer_length, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE);
 
-			VkMemoryRequirements vk_uniform_buffer_mem_reqs { renderer->device.MemReqs(buffer) };
+			VkMemoryRequirements buffer_mem_reqs { renderer->device.MemReqs(buffer) };
 
-			uint64_t vk_uniform_buffer_mem_index { renderer->device.getMemTypeIndex(&vk_uniform_buffer_mem_reqs, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) };
+			uint64_t buffer_mem_index { renderer->device.getMemTypeIndex(&buffer_mem_reqs, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) };
 
-			VkDeviceMemory vk_uniform_buffer_mem { renderer->device.Mem(vk_uniform_buffer_mem_reqs.size, vk_uniform_buffer_mem_index) };
+			VkDeviceMemory buffer_mem { renderer->device.Mem(buffer_mem_reqs.size, buffer_mem_index) };
 
-			renderer->device.bindMem(buffer, vk_uniform_buffer_mem);
+			renderer->device.bindMem(buffer, buffer_mem);
 
-			mapped_memory_addr = renderer->device.mapMem(vk_uniform_buffer_mem, 0, buffer_length, 0);
+			mapped_memory_addr = renderer->device.mapMem(buffer_mem, 0, buffer_length, 0);
 
 
 
@@ -1038,6 +1104,40 @@ namespace RDTY
 
 
 
+		StorageBlock::StorageBlock (RendererBase* _renderer, WRAPPERS::StorageBlock* _wrapper)
+		{
+			renderer = _renderer;
+			wrapper = _wrapper;
+
+
+
+			layout.binding = wrapper->binding;
+
+			layout.stageFlags = getBitMask<VkShaderStageFlags>(wrapper->visibility, UniformBlock::VISIBILITY);
+
+
+
+			buffer = renderer->device.Buffer(wrapper->size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE);
+
+			VkMemoryRequirements buffer_mem_reqs { renderer->device.MemReqs(buffer) };
+
+			uint64_t buffer_mem_index { renderer->device.getMemTypeIndex(&buffer_mem_reqs, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) };
+
+			VkDeviceMemory buffer_mem { renderer->device.Mem(buffer_mem_reqs.size, buffer_mem_index) };
+
+			renderer->device.bindMem(buffer, buffer_mem);
+
+			mapped_memory_addr = renderer->device.mapMem(buffer_mem, 0, wrapper->size, 0);
+
+			memcpy(mapped_memory_addr, wrapper->data, wrapper->size);
+
+
+
+			descr_bi.buffer = buffer;
+		}
+
+
+
 		DescriptorSet::DescriptorSet (RendererBase* _renderer, WRAPPERS::DescriptorSet* _wrapper)
 		{
 			renderer = _renderer;
@@ -1048,13 +1148,70 @@ namespace RDTY
 			std::vector<VkDescriptorSetLayoutBinding> descr_set_layout_bindings {};
 			std::vector<VkWriteDescriptorSet> write_descr_sets {};
 
-			for (WRAPPERS::UniformBlock* binding_wrapper : wrapper->bindings)
+			// for (WRAPPERS::UniformBlock* binding_wrapper : wrapper->bindings)
+			// {
+			// 	UniformBlock* binding { getInstance<UniformBlock, WRAPPERS::UniformBlock>(renderer, binding_wrapper) };
+
+			// 	bindings.push_back(binding);
+
+			// 	descr_set_layout_bindings.push_back(binding->layout);
+			// }
+
+			for (void* binding_wrapper : wrapper->bindings)
 			{
-				UniformBlock* binding { getInstance<UniformBlock, WRAPPERS::UniformBlock>(renderer, binding_wrapper) };
+				WRAPPERS::DESCRIPTOR_BINDING::Type* descriptor_binding_type =
+					reinterpret_cast<WRAPPERS::DESCRIPTOR_BINDING::Type*>(binding_wrapper);
 
-				bindings.push_back(binding);
+				if (*descriptor_binding_type == WRAPPERS::DESCRIPTOR_BINDING::Type::UNIFORM_BLOCK)
+				{
+					UniformBlock* binding { getInstance<UniformBlock, WRAPPERS::UniformBlock>(renderer, reinterpret_cast<WRAPPERS::UniformBlock*>(binding_wrapper)) };
 
-				descr_set_layout_bindings.push_back(binding->layout);
+					// bindings.push_back(binding);
+
+					descr_set_layout_bindings.push_back(binding->layout);
+
+
+
+					VkWriteDescriptorSet write_descr_set =
+						WriteDescrSet
+						(
+							handle, binding->wrapper->binding, 0,
+							1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+							nullptr,
+							&binding->descr_bi,
+							nullptr
+						);
+
+					write_descr_sets.push_back(write_descr_set);
+				}
+				else if (*descriptor_binding_type == WRAPPERS::DESCRIPTOR_BINDING::Type::STORAGE_BLOCK)
+				{
+					StorageBlock* binding { getInstance<StorageBlock, WRAPPERS::StorageBlock>(renderer, reinterpret_cast<WRAPPERS::StorageBlock*>(binding_wrapper)) };
+
+					// bindings.push_back(binding);
+
+					descr_set_layout_bindings.push_back(binding->layout);
+
+
+
+					VkWriteDescriptorSet write_descr_set =
+						WriteDescrSet
+						(
+							handle, binding->wrapper->binding, 0,
+							1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+							nullptr,
+							&binding->descr_bi,
+							nullptr
+						);
+
+					write_descr_sets.push_back(write_descr_set);
+				}
+
+				// UniformBlock* binding { getInstance<UniformBlock, WRAPPERS::UniformBlock>(renderer, binding_wrapper) };
+
+				// bindings.push_back(binding);
+
+				// descr_set_layout_bindings.push_back(binding->layout);
 			}
 
 			// cout << "Bindings: " << descr_set_layout_bindings.size() << endl;
@@ -1064,20 +1221,20 @@ namespace RDTY
 
 			// cout << "handle: " << handle << endl;
 
-			for (UniformBlock* binding : bindings)
-			{
-				VkWriteDescriptorSet write_descr_set =
-					WriteDescrSet
-					(
-						handle, binding->wrapper->binding, 0,
-						1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-						nullptr,
-						&binding->descr_bi,
-						nullptr
-					);
+			// for (UniformBlock* binding : bindings)
+			// {
+			// 	// VkWriteDescriptorSet write_descr_set =
+			// 	// 	WriteDescrSet
+			// 	// 	(
+			// 	// 		handle, binding->wrapper->binding, 0,
+			// 	// 		1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			// 	// 		nullptr,
+			// 	// 		&binding->descr_bi,
+			// 	// 		nullptr
+			// 	// 	);
 
-				write_descr_sets.push_back(write_descr_set);
-			}
+			// 	// write_descr_sets.push_back(write_descr_set);
+			// }
 
 
 
@@ -1253,19 +1410,19 @@ namespace RDTY
 			{
 				case MATERIAL::ShaderUsage::SPIRV:
 				{
-					ppl_stages[0] = PplShader(VK_SHADER_STAGE_VERTEX_BIT, renderer->device.Shader(wrapper->spirv_code_vertex.size() * sizeof(uint32_t), wrapper->spirv_code_vertex.data()));
-					ppl_stages[1] = PplShader(VK_SHADER_STAGE_FRAGMENT_BIT, renderer->device.Shader(wrapper->spirv_code_fragment.size() * sizeof(uint32_t), wrapper->spirv_code_fragment.data()));
+					ppl_stages[0] = PplShader(VK_SHADER_STAGE_VERTEX_BIT, renderer->device.Shader(wrapper->code_vertex_spirv.size() * sizeof(uint32_t), wrapper->code_vertex_spirv.data()));
+					ppl_stages[1] = PplShader(VK_SHADER_STAGE_FRAGMENT_BIT, renderer->device.Shader(wrapper->code_fragment_spirv.size() * sizeof(uint32_t), wrapper->code_fragment_spirv.data()));
 
 					break;
 				}
 
-				case MATERIAL::ShaderUsage::GLSL_VULKAN:
+				case MATERIAL::ShaderUsage::GLSL:
 				{
-					std::vector<uint32_t> spirv_code_vertex = compileGlslToSpirv(wrapper->glsl_vulkan_code_vertex.c_str(), GLSLANG_STAGE_VERTEX);
-					std::vector<uint32_t> spirv_code_fragment = compileGlslToSpirv(wrapper->glsl_vulkan_code_fragment.c_str(), GLSLANG_STAGE_FRAGMENT);
+					std::vector<uint32_t> code_vertex_spirv = compileGlslToSpirv(wrapper->code_vertex_glsl.c_str(), GLSLANG_STAGE_VERTEX);
+					std::vector<uint32_t> code_fragment_spirv = compileGlslToSpirv(wrapper->code_fragment_glsl.c_str(), GLSLANG_STAGE_FRAGMENT);
 
-					ppl_stages[0] = PplShader(VK_SHADER_STAGE_VERTEX_BIT, renderer->device.Shader(spirv_code_vertex.size() * sizeof(uint32_t), spirv_code_vertex.data()));
-					ppl_stages[1] = PplShader(VK_SHADER_STAGE_FRAGMENT_BIT, renderer->device.Shader(spirv_code_fragment.size() * sizeof(uint32_t), spirv_code_fragment.data()));
+					ppl_stages[0] = PplShader(VK_SHADER_STAGE_VERTEX_BIT, renderer->device.Shader(code_vertex_spirv.size() * sizeof(uint32_t), code_vertex_spirv.data()));
+					ppl_stages[1] = PplShader(VK_SHADER_STAGE_FRAGMENT_BIT, renderer->device.Shader(code_fragment_spirv.size() * sizeof(uint32_t), code_fragment_spirv.data()));
 
 					break;
 				}
@@ -1330,7 +1487,29 @@ namespace RDTY
 
 		void Object::draw (void) const
 		{
-			vkCmdDraw(renderer->cmd_buffers[renderer->curr_image], wrapper->scene_vertex_data_length, 1, wrapper->scene_vertex_data_offset, 0);
+			vkCmdDraw(renderer->cmd_buffers[renderer->curr_image], wrapper->scene_vertex_data_size, 1, wrapper->scene_vertex_data_offset, 0);
+		}
+
+		void Object::draw2 (void) const
+		{
+			vkCmdDraw(renderer->cmd_buffers[renderer->curr_image], wrapper->position_data.size() / 3, 1, 0, 0);
+		}
+
+		void Object::createBuffers (void)
+		{
+			position_buffer = renderer->device.Buffer(wrapper->position_data.size() * sizeof(float), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE);
+
+			VkMemoryRequirements position_buffer_mem_reqs { renderer->device.MemReqs(position_buffer) };
+
+			uint64_t position_buffer_mem_index { renderer->device.getMemTypeIndex(&position_buffer_mem_reqs, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) };
+
+			VkDeviceMemory position_buffer_mem { renderer->device.Mem(position_buffer_mem_reqs.size, position_buffer_mem_index) };
+
+			renderer->device.bindMem(position_buffer, position_buffer_mem);
+
+			void* position_buffer_mem_addr { renderer->device.mapMem(position_buffer_mem, 0, wrapper->position_data.size() * sizeof(float), 0) };
+
+			memcpy(position_buffer_mem_addr, wrapper->position_data.data(), wrapper->position_data.size() * sizeof(float));
 		}
 
 
