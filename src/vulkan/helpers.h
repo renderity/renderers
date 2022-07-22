@@ -1,23 +1,52 @@
+// #if defined(__linux__)
+// 	#define SHARED_LIBRARY_MODULE_TYPE void*
+// 	#define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
+// 	#define SHARED_LIBRARY_LOAD_FUNCTION dlsym
+// 	#define SHARED_LIBRARY_FREE dlclose
+// 	#define LOAD_VULKAN_LOADER() dlopen("libvulkan.so.1", RTLD_LAZY)
+// #elif defined(__APPLE__)
+// 	#define SHARED_LIBRARY_MODULE_TYPE void*
+// 	#define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
+// 	#define SHARED_LIBRARY_LOAD_FUNCTION dlsym
+// 	#define SHARED_LIBRARY_FREE dlclose
+// 	#define LOAD_VULKAN_LOADER() dlopen("libvulkan.so.1", RTLD_LAZY)
+// #elif defined(_WIN64)
+// 	#define SHARED_LIBRARY_MODULE_TYPE HMODULE
+// 	#define SHARED_LIBRARY_MODULE_INIT_VALUE 0
+// 	#define SHARED_LIBRARY_LOAD_FUNCTION GetProcAddress
+// 	#define SHARED_LIBRARY_FREE FreeLibrary
+// 	#define LOAD_VULKAN_LOADER() LoadLibrary("vulkan-1.dll")
+// #endif
+
 #if defined(__linux__)
 	#define SHARED_LIBRARY_MODULE_TYPE void*
 	#define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
 	#define SHARED_LIBRARY_LOAD_FUNCTION dlsym
 	#define SHARED_LIBRARY_FREE dlclose
 	#define LOAD_VULKAN_LOADER() dlopen("libvulkan.so.1", RTLD_LAZY)
+
+	// #define GLFW_EXPOSE_NATIVE_X11
+	#define VK_USE_PLATFORM_XLIB_KHR
+	#include <X11/Xlib.h>
+	#include <dlfcn.h>
+#elif defined(__APPLE__)
+	#define SHARED_LIBRARY_MODULE_TYPE void*
+	#define SHARED_LIBRARY_MODULE_INIT_VALUE nullptr
+	#define SHARED_LIBRARY_LOAD_FUNCTION dlsym
+	#define SHARED_LIBRARY_FREE dlclose
+	#define LOAD_VULKAN_LOADER() dlopen("/Users/Denis/lib/VulkanSDK/1.3.216.0/macOS/lib/libvulkan.1.dylib", RTLD_LAZY)
+
+	// #define GLFW_EXPOSE_NATIVE_COCOA
+	#define VK_USE_PLATFORM_MACOS_MVK
+	#include <Cocoa/Cocoa.h>
+	#include <dlfcn.h>
 #elif defined(_WIN64)
 	#define SHARED_LIBRARY_MODULE_TYPE HMODULE
 	#define SHARED_LIBRARY_MODULE_INIT_VALUE 0
 	#define SHARED_LIBRARY_LOAD_FUNCTION GetProcAddress
 	#define SHARED_LIBRARY_FREE FreeLibrary
 	#define LOAD_VULKAN_LOADER() LoadLibrary("vulkan-1.dll")
-#endif
 
-#if defined(__linux__)
-	// #define GLFW_EXPOSE_NATIVE_X11
-	#define VK_USE_PLATFORM_XLIB_KHR
-	#include <X11/Xlib.h>
-	#include <dlfcn.h>
-#elif defined(_WIN64)
 	// #define GLFW_EXPOSE_NATIVE_WIN32
 	#define VK_USE_PLATFORM_WIN32_KHR
 	#define WIN32_LEAN_AND_MEAN
