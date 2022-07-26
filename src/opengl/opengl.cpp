@@ -451,7 +451,7 @@ namespace RDTY
 			(
 				Material::used_instance->topology,
 				wrapper->scene_vertex_data_offset,
-				wrapper->scene_vertex_data_size
+				wrapper->scene_vertex_data_length
 			);
 		}
 

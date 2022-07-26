@@ -1487,7 +1487,7 @@ namespace RDTY
 
 		void Object::draw (void) const
 		{
-			vkCmdDraw(renderer->cmd_buffers[renderer->curr_image], wrapper->scene_vertex_data_size, 1, wrapper->scene_vertex_data_offset, 0);
+			vkCmdDraw(renderer->cmd_buffers[renderer->curr_image], wrapper->scene_vertex_data_length, 1, wrapper->scene_vertex_data_offset, 0);
 		}
 
 		void Object::draw2 (void) const
